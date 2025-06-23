@@ -31,5 +31,5 @@ We use vgamepad for neatly packaging it into a controller.
 Sure! Make any changes you want. Maybe make a pull request out of it..
 
 # TODO
-- Add Sideways mode
-- Add Dual JoyCon mode (seperate script)
+- Add Sideways mode to SOLO code
+- Add multiplayer support? Running the script twice but pairing a diff joycon should do this but i might add it as a SOLO setting
