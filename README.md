@@ -6,6 +6,10 @@ Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 
 ---
 
+## DISCLAIMER (x2)
+Hey! Noticing some people are actually checking out the repo. Please bear with me while I work on ironing out bugs!!
+Also, about the ProCon2. I could very easily get one to work, I don't have one tho. I'll make a file for this in a sec.
+
 ## DISCLAIMER
 
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
