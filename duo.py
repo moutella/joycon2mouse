@@ -49,7 +49,23 @@ def parse_buttons(data, side):
     if len(data) < offset + 3:
         return
     state = int.from_bytes(data[offset:offset+3], byteorder='big')
+
+    # Shoulders
+    if side == "LEFT":
+        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000040 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
+    if side == "RIGHT":
+        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x004000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+
+    # Triggers (simulate analog with 255/0)
+    if side == "LEFT":
+        gamepad.left_trigger(255 if state & 0x000080 else 0)
+    if side == "RIGHT":
+        gamepad.right_trigger(255 if state & 0x008000 else 0)
+
+    # All other digital buttons
     for name, (mask, vg_button) in BUTTONS[side].items():
+        if name in ["L", "R"]:  # skip shoulders (already handled)
+            continue
         if state & mask:
             gamepad.press_button(vg_button)
         else:
