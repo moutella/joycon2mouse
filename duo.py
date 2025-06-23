@@ -15,8 +15,8 @@ BUTTONS = {
         "B":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
         "X":    (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
         "Y":    (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
-        "PLUS": (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
-        "R":    (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
+        "PLUS": (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
+        "R":    (0x004000, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
         "STICK":(0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB)
     },
     "LEFT": {
@@ -29,6 +29,7 @@ BUTTONS = {
         "STICK": (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB)
     }
 }
+
 
 gamepad = vg.VX360Gamepad()
 
@@ -123,3 +124,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
