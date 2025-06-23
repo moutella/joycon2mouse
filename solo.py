@@ -1,4 +1,4 @@
-# THIS FILE IS FOR: Solo JoyCon, WINDOWS ONLY
+# THIS FILE IS FOR: Solo JoyCon
 import asyncio
 from bleak import BleakScanner, BleakClient
 import binascii
