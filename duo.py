@@ -11,22 +11,22 @@ INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 # Button masks
 BUTTONS = {
     "RIGHT": {
-        "A":    (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
-        "B":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
-        "X":    (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
-        "Y":    (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
-        "PLUS": (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
-        "R":    (0x008000, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
-        "STICK":(0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB)
+        "A":     (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
+        "B":     (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
+        "X":     (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
+        "Y":     (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
+        "PLUS":  (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
+        "STICK": (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB),
+        # Don't include "R" (shoulder) or trigger in this dictionary anymore
     },
     "LEFT": {
-        "UP":    (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
-        "DOWN":  (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
-        "LEFT":  (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
-        "RIGHT": (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
-        "MINUS": (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
-        "L":     (0x000080, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER),
-        "STICK": (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB)
+        "UP":     (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
+        "DOWN":   (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
+        "LEFT":   (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
+        "RIGHT":  (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
+        "MINUS":  (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
+        "STICK":  (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB),
+        # Don't include "L" (shoulder) or trigger here either
     }
 }
 
@@ -49,7 +49,23 @@ def parse_buttons(data, side):
     if len(data) < offset + 3:
         return
     state = int.from_bytes(data[offset:offset+3], byteorder='big')
+
+    # Shoulders
+    if side == "LEFT":
+        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000040 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
+    if side == "RIGHT":
+        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x004000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+
+    # Triggers (simulate analog with 255/0)
+    if side == "LEFT":
+        gamepad.left_trigger(255 if state & 0x000080 else 0)
+    if side == "RIGHT":
+        gamepad.right_trigger(255 if state & 0x008000 else 0)
+
+    # All other digital buttons
     for name, (mask, vg_button) in BUTTONS[side].items():
+        if name in ["L", "R"]:  # skip shoulders (already handled)
+            continue
         if state & mask:
             gamepad.press_button(vg_button)
         else:
