@@ -77,10 +77,22 @@ async def notification_handler(sender, data):
     try:
         print(f"[RAW] {data.hex()}")
         parse_buttons(data)
-        stick = data[13:16]
-        x, y = decode_joystick(stick)
-        gamepad.left_joystick(x_value=x, y_value=y)
+
+        # Decode left and right sticks
+        left_raw = data[10:13]
+        right_raw = data[13:16]
+
+        lx, ly = decode_joystick(left_raw)
+        rx, ry = decode_joystick(right_raw)
+
+        print(f"🎯 Left Stick : x={lx}, y={ly}")
+        print(f"🎯 Right Stick: x={rx}, y={ry}")
+
+        gamepad.left_joystick(x_value=lx, y_value=ly)
+        # gamepad.right_joystick(x_value=rx, y_value=ry)  # Optional: enable if right stick needed
+
         gamepad.update()
+
     except Exception as e:
         print("⚠️ Error in notification handler:", e)
         traceback.print_exc()
