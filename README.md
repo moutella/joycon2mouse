@@ -1,6 +1,8 @@
 # joycon2py
 A light Python script that turns the Joy Con 2's into working PC controllers.
 
+Joy Con 2's (Switch 2) currently do not work natively on PC. This project aims to fix that.
+
 # DISCLAIMER
 This project will primarily focus on Windows (and is windows only), mostly because vgamepad is Windows exclusive. You are free to make your own MacOS/Linux version of the script however. 
 
