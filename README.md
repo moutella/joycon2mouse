@@ -10,8 +10,16 @@ It mainly uses bleak for this BLE stuff.
 On Windows, we use vgamepad for neatly packaging it into a controller.
 On anything else, we use pygame and a lot of dumb stuff to use your KEYBOARD AND MOUSE as the controller. Horrible, but vgamepad is windows only. What can ya do
 
+# How do I use it?
+- Open the program up
+- When using the SOLO files, put the JoyCon you wanna add into sync mode (small button on the colored bit)
+- It'll ask you what side JoyCon it is (bits tend to be shifted on different sides so do this so your data gets sent right)
+- WINDOWS: It'll start parsing every input from the JoyCon into an SDL XBox 360 Controller through vgamepad.
+- OTHER: It'll start parsing every input from the JoyCon through your keyboard and mouse.
+
+- DUAL: nun here yet i havent made it yet LOL
+
 # TODO
-- Use a better method for checking Left/Right other than looking at my specific JoyCon addresses. (When this is figured out I'll add the script itself)
 - Add Sideways axis/button map support
 - Add Dual JoyCon mode
 - make less dumb
