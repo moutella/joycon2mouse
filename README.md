@@ -11,4 +11,7 @@ On Windows, we use vgamepad for neatly packaging it into a controller.
 On anything else, we use pygame and a lot of dumb stuff to use your KEYBOARD AND MOUSE as the controller. Horrible, but vgamepad is windows only. What can ya do
 
 # TODO
-Unlink the left/right checker from my addresses so that it can actually be added to the repo
+- Use a better method for checking Left/Right other than looking at my specific JoyCon addresses. (When this is figured out I'll add the script itself)
+- Add Sideways axis/button map support
+- Add Dual JoyCon mode
+- make less dumb
