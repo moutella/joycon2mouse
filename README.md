@@ -4,6 +4,9 @@ A light Python script that turns the Joy Con 2's into working PC controllers.
 # What is this?
 JoyCon2Py - a project aimed at giving the Joy Con 2's life on the PC (ig while we wait for official nintendo support, if ever)
 
+# WARNING FOR WINDOWS USERS
+If you're on windows PLEASE use the windows file its sooo much better vgamepad is so good i promise (make sure to get the windows dependencies, listed below so it works)
+
 # DEPENDENCIES
 - python (duh)  
 - bleak (`pip install bleak`)  
