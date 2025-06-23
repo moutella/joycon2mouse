@@ -93,7 +93,7 @@ async def notification_handler(sender, data):
         print(f"🎯 Right Stick: x={rx}, y={ry}")
 
         gamepad.left_joystick(x_value=lx, y_value=ly)
-        # gamepad.right_joystick(x_value=rx, y_value=ry)  # Optional: enable if right stick needed
+        gamepad.right_joystick(x_value=rx, y_value=ry)
 
         gamepad.update()
 
