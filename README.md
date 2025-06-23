@@ -35,7 +35,7 @@ Is only compatible with JoyCon 2 so far. When data from procon2.py gets given an
 - IMPORTANT: It'll assume you're using it sideways. Use it in that orientation (or edit the code to not, if you want.)
 
 - Open the script.
-- Put the Joy-Con in sync mode (small black button on the edge).
+- Put the Joy-Con in sync mode (small colored button on the edge).
 - When prompted, enter whether it’s a left or right Joy-Con.
 - The script will parse and translate input to a virtual Xbox 360 controller.
 
