@@ -15,7 +15,7 @@ On anything else, we use pygame and a lot of dumb stuff to use your KEYBOARD AND
 - When using the SOLO files, put the JoyCon you wanna add into sync mode (small button on the colored bit)
 - It'll ask you what side JoyCon it is (bits tend to be shifted on different sides so do this so your data gets sent right)
 - WINDOWS: It'll start parsing every input from the JoyCon into an SDL XBox 360 Controller through vgamepad.
-- OTHER: It'll start parsing every input from the JoyCon through your keyboard and mouse.
+- OTHER: It'll start parsing every input from the JoyCon through your keyboard and mouse. (Press F6 to toggle the joystick moving the mouse)
 
 - DUAL: nun here yet i havent made it yet LOL
 
