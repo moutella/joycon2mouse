@@ -15,7 +15,7 @@ If you're on windows PLEASE use the windows file its sooo much better vgamepad i
   - vgamepad (`pip install vgamepad`) (requires installation of ViGEmBus drivers, found here: https://github.com/ViGEm/ViGEmBus/releases/latest)  
 - OTHER:  
   - pynput (`pip install pynput`)
-  - screeninfo (`pip install pynput`)
+  - screeninfo (`pip install screeninfo`)
 
 # How does it work?
 Starting up the program, it'll look for JoyCons. If it finds one, it'll connect to it and start looking for input notifications, through which we obtain input data from the JoyCon.  
