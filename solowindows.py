@@ -52,19 +52,22 @@ class JoystickFilter:
 
 async def scan_for_joycons():
     print("Scanning for Joy-Cons...")
-    devices = await BleakScanner.discover()
+
     joycon_devices = []
 
-    for device in devices:
-        if hasattr(device, 'metadata'):
-            manufacturer_data = device.metadata.get("manufacturer_data", {})
-            for manufacturer_id, data in manufacturer_data.items():
-                if (manufacturer_id == JOYCON_MANUFACTURER_ID and
-                        data.startswith(JOYCON_MANUFACTURER_PREFIX)):
+    def detection_callback(device, advertisement_data):
+        manufacturer_data = advertisement_data.manufacturer_data
+        if JOYCON_MANUFACTURER_ID in manufacturer_data:
+            data = manufacturer_data[JOYCON_MANUFACTURER_ID]
+            if data.startswith(JOYCON_MANUFACTURER_PREFIX):
+                if device not in joycon_devices:
                     print(f"Found Joy-Con: {device.address}")
                     joycon_devices.append(device)
-        else:
-            print(f"Device {device.address} has no metadata")
+
+    scanner = BleakScanner(detection_callback)
+    await scanner.start()
+    await asyncio.sleep(5)  # scan duration, adjust as needed
+    await scanner.stop()
 
     return joycon_devices
 
@@ -229,7 +232,6 @@ async def notification_handler(sender, data, is_left):
         gamepad.update()
 
         # Debug output showing raw values
-        print(f"RAW Joystick - X: {x:6d} ({x/32767:.2f}) Y: {y:6d} ({y/32767:.2f})")
 
     except Exception as e:
         print(f"Error processing data: {e}")
