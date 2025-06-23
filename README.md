@@ -7,19 +7,21 @@ JoyCon2Py - a project aimed at giving the Joy Con 2's life on the PC (ig while w
 # WARNING FOR WINDOWS USERS
 If you're on windows PLEASE use the windows file its sooo much better vgamepad is so good i promise (make sure to get the windows dependencies, listed below so it works)
 
+
 # DEPENDENCIES
 - python (duh)  
 - bleak (`pip install bleak`)  
 - WINDOWS:  
   - vgamepad (`pip install vgamepad`) (requires installation of ViGEmBus drivers, found here: https://github.com/ViGEm/ViGEmBus/releases/latest)  
 - OTHER:  
-  - pygame (`pip install pygame`)
+  - pynput (`pip install pynput`)
+  - screeninfo (`pip install pynput`)
 
 # How does it work?
 Starting up the program, it'll look for JoyCons. If it finds one, it'll connect to it and start looking for input notifications, through which we obtain input data from the JoyCon.  
 It mainly uses bleak for this BLE stuff.  
 On Windows, we use vgamepad for neatly packaging it into a controller.  
-On anything else, we use pygame and a lot of dumb stuff to use your KEYBOARD AND MOUSE as the controller. Horrible, but vgamepad is windows only. What can ya do
+On anything else, we use pynput and a lot of dumb stuff to use your KEYBOARD AND MOUSE as the controller. Horrible, but vgamepad is windows only. What can ya do
 
 # How do I use it?
 - Open the program up  
@@ -37,4 +39,4 @@ im not the best coder so if u wanna make the ui better, parse new buttons, use d
 # TODO
 - Add Sideways axis/button map support  
 - Add Dual JoyCon mode  
-- make less dumb
+- Make the non-windows version wayyy less bad (like seriously the joystick is catastrophically bad right now)
