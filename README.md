@@ -8,12 +8,11 @@ Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 
 ## DISCLAIMERS 
 Hey! Noticing some people are actually checking out the repo. Please bear with me while I work on ironing out bugs!!
-Also, if you have the Pro Controller 2, please use procon2.py to give me data from it! That way, I can actually make a working file for the ProCon2. Thanks alot!
 
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
 You're free to make your own macOS/Linux fork if you want.
 
-Is only compatible with JoyCon 2 so far. When data from procon2.py gets given and I fix the file, it'll support the ProCon2, given it works similar to the JoyCon2s.
+JoyCon 2's are fully supported, ProCon2 support in progress. Joysticks work fine, some buttons work fine. I don't have the hardware on hand so data is being given from other people.
 
 ---
 
@@ -37,6 +36,11 @@ Is only compatible with JoyCon 2 so far. When data from procon2.py gets given an
 - Open the script.
 - Put the Joy-Con in sync mode (small colored button on the edge).
 - When prompted, enter whether it’s a left or right Joy-Con.
+- The script will parse and translate input to a virtual Xbox 360 controller.
+
+### 🔹 PROCON2:
+- Open the script.
+- Put the ProCon2 in sync mode (small black button on the top).
 - The script will parse and translate input to a virtual Xbox 360 controller.
 
 ### 🔸 DUAL Mode:
