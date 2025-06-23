@@ -17,6 +17,8 @@ You're free to make your own macOS/Linux fork if you want.
 
 Here, I'll document some findings on Joy-Con 2 behavior.
 
+Something I've documented just in general is something I call BLE DEADMODE. It's where if you keep constantly trying to use the program, the joycons eventually can't connect unless you let them idle for a bit. This is probably because the bluetooth stuff has to cool down sometimes. So, make sure you're not trying to use the program like twice per second or something
+
 ### 🔔 Notifications
 
 **Example notification:**
