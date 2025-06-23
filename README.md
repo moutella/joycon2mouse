@@ -30,6 +30,10 @@ On anything else, we use pygame and a lot of dumb stuff to use your KEYBOARD AND
 
 - DUAL: nun here yet i havent made it yet LOL
 
+# Can I make contributions?
+do whatever with the code idc
+im not the best coder so if u wanna make the ui better, parse new buttons, use different stuff whatever idc dude go for it. maybe even do a pull request of that stuff
+
 # TODO
 - Add Sideways axis/button map support  
 - Add Dual JoyCon mode  
