@@ -115,10 +115,10 @@ def parse_buttons(data, is_left, is_sideways=False):
         if is_left:
             # Sideways LEFT Joy-Con: D-Pad → ABXY (rotated)
             if button_state & LEFT_BUTTON_DOWN:
-                pressed_buttons.add("A")
-                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+                pressed_buttons.add("X")
+                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
             else:
-                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
 
             if button_state & LEFT_BUTTON_LEFT:
                 pressed_buttons.add("B")
@@ -127,10 +127,10 @@ def parse_buttons(data, is_left, is_sideways=False):
                 gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
 
             if button_state & LEFT_BUTTON_RIGHT:
-                pressed_buttons.add("X")
-                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
+                pressed_buttons.add("A")
+                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
             else:
-                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
+                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
 
             if button_state & LEFT_BUTTON_UP:
                 pressed_buttons.add("Y")
