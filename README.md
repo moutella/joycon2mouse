@@ -1,5 +1,5 @@
 # joycon2py
-repo for the joycon2py syncer script
+A light Python script that turns the Joy Con 2's into working PC controllers.
 
 # What is this?
 JoyCon2Py - a project aimed at giving the Joy Con 2's life on the PC (ig while we wait for official nintendo support, if ever)
