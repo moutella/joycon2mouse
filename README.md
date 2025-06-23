@@ -10,8 +10,6 @@ Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 Hey! Noticing some people are actually checking out the repo. Please bear with me while I work on ironing out bugs!!
 Also, if you have the Pro Controller 2, please use procon2.py to give me data from it! That way, I can actually make a working file for the ProCon2. Thanks alot!
 
----
-
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
 You're free to make your own macOS/Linux fork if you want.
 
@@ -28,7 +26,9 @@ Is only compatible with JoyCon 2 so far. When data from procon2.py gets given an
   → `pip install vgamepad`  
   → Requires [ViGEmBus drivers](https://github.com/ViGEm/ViGEmBus/releases/latest) installed
 
-  ## How do I use it?
+---
+
+## How do I use it?
 
 ### 🔹 SOLO Mode:
 
@@ -54,9 +54,6 @@ Is only compatible with JoyCon 2 so far. When data from procon2.py gets given an
 1. The program scans for Joy-Cons.
 2. Once found, it connects via BLE and listens for input notifications.
 3. These inputs are parsed and translated into controller actions using `vgamepad`.
-
----
-
 
 ---
 
