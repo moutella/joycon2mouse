@@ -6,6 +6,19 @@ Joy Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 # DISCLAIMER
 This project will primarily focus on Windows (and is windows only), mostly because vgamepad is Windows exclusive. You are free to make your own MacOS/Linux version of the script however. 
 
+# RESEARCH
+Here, i'll document some of my findings for JoyCon 2's.
+- Notifications
+Example notification: 35ae0000000000e0ff0ffff77f20e8790000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000
+35: Header
+a3 00: Timestamp (00 increments upward when a minute passes i think)
+00000000: Button inputs
+e0ff0ffff77: ?
+20e879 - stick data
+0000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000: ?
+Haven't found gyro/accel/battery data in here yet. Writing a LED command DOES work but notifications stop coming in. Unknown why this happens. I think its because it expects super specific command data and crashes if it doesnt get the stuff it wants, so we'll need to figure out what it wants for working LEDs and a possible IMU enable command if we need one for gyro/accel.
+
+
 # DEPENDENCIES
 - python (duh)  
 - bleak (`pip install bleak`)  
