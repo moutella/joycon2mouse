@@ -41,6 +41,7 @@ Something I've documented just in general is something I call BLE DEADMODE. It's
 > Writing a **LED command works**, but it causes notifications to stop.  
 > Possibly because the Joy-Con expects a strict command protocol and "crashes" if something's missing or invalid.  
 > We'll need to reverse this format further to find valid LED and IMU enable subcommands.
+> IMU data seems to be the zeroed out bytes, possibly enabled by commands, which we have yet to figure out.
 
 ---
 
@@ -91,7 +92,6 @@ Make any changes you like, or submit a pull request if you think it's worth shar
 
 ## TODO
 
-- [ ] Add sideways mode for SOLO Joy-Con use  
-- [ ] Add true multiplayer support (currently, you can run two instances of the script for two separate Joy-Cons)
+- [ ] Add multiplayer mode, connecting and making two controllers in the same file (right now opening the script twice and pairing dif joycon in each one does this, but i think the rework will be a bit cleaner)
 
 ---
