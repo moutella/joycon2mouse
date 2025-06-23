@@ -1,140 +1,92 @@
-# THIS FILE IS FOR: Solo JoyCon
+# This file is for: DUO JoyCons
 import asyncio
 from bleak import BleakScanner, BleakClient
 import vgamepad as vg
 
+# Constants
 JOYCON_MANUFACTURER_ID = 1363
 JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
 INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 
-SL_MASK = 0x002000  # SL button mask on right Joy-Con
-SR_MASK = 0x001000  # SR button mask on right Joy-Con
-LEFT_SL_MASK = 0x000020
-LEFT_SR_MASK = 0x000010
-
-# Masks
-MASKS = {
+# Button masks
+BUTTONS = {
     "RIGHT": {
-        "A":    (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
-        "B":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
-        "X":    (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
-        "Y":    (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
-        "PLUS": (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
-        "R":    (0x004000, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
-        "RT":   0x008000,
+        "A":    (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
+        "B":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
+        "X":    (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
+        "Y":    (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
+        "PLUS": (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
+        "R":    (0x008000, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
         "STICK":(0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB)
     },
     "LEFT": {
-        "UP":     (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
-        "DOWN":   (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
-        "LEFT":   (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
-        "RIGHT":  (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
-        "MINUS":  (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
-        "L":      (0x000040, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER),
-        "LT":     0x000080,
-        "STICK":  (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB)
+        "UP":    (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
+        "DOWN":  (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
+        "LEFT":  (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
+        "RIGHT": (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
+        "MINUS": (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
+        "L":     (0x000080, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER),
+        "STICK": (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB)
     }
 }
 
+
 gamepad = vg.VX360Gamepad()
 
-def decode_joystick(data, is_left, is_sideways=True):
+def decode_joystick(data):
     if len(data) != 3:
-        return 0, 0
+        raise ValueError("Joystick data must be 3 bytes")
     x = ((data[1] & 0x0F) << 8) | data[0]
     y = (data[2] << 4) | ((data[1] & 0xF0) >> 4)
-    x = (x - 2048) / 2048.0
-    y = (y - 2048) / 2048.0
-    # Always sideways transformation
-    if is_sideways:
-        if is_left:
-            x, y = -y, x
-        else:
-            x, y = y, -x
-    deadzone = 0.08
-    if abs(x) < deadzone and abs(y) < deadzone:
-        return 0, 0
-    x = max(-1.0, min(1.0, x * 1.7))
-    y = max(-1.0, min(1.0, y * 1.7))
-    return int(x * 32767), int(y * 32767)
+    x = max(-1.0, min(1.0, (x - 2048) / 2048.0 * 1.7))
+    y = max(-1.0, min(1.0, (y - 2048) / 2048.0 * 1.7))
+    x_scaled = int(x * 32767)
+    y_scaled = int(y * 32767)
+    return x_scaled, y_scaled
 
-def parse_buttons(data, side, is_sideways=True):
+def parse_buttons(data, side):
     offset = 4 if side == "LEFT" else 3
     if len(data) < offset + 3:
         return
     state = int.from_bytes(data[offset:offset+3], byteorder='big')
-
-    if side == "LEFT":
-        # Left shoulder button
-        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & MASKS["LEFT"]["L"][0] else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-        gamepad.left_trigger(255 if state & MASKS["LEFT"]["LT"] else 0)
-
-        # SL → left shoulder
-        if state & LEFT_SL_MASK:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-        else:
-            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-
-        # SR → right shoulder
-        if state & LEFT_SR_MASK:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-        else:
-            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-
-    else:
-        # Right Joy-Con shoulders and triggers
-        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & MASKS["RIGHT"]["R"][0] else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-        gamepad.right_trigger(255 if state & MASKS["RIGHT"]["RT"] else 0)
-
-        # SL → left shoulder (right Joy-Con)
-        if state & SL_MASK:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-        else:
-            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-
-        # SR → right shoulder (right Joy-Con)
-        if state & SR_MASK:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-        else:
-            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-
-    # Regular buttons
-    for name, val in MASKS[side].items():
-        if name in ["L", "R", "LT", "RT"]:
-            continue
-        mask, vg_btn = val
+    for name, (mask, vg_button) in BUTTONS[side].items():
         if state & mask:
-            gamepad.press_button(vg_btn)
+            gamepad.press_button(vg_button)
         else:
-            gamepad.release_button(vg_btn)
+            gamepad.release_button(vg_button)
 
-async def notification_handler(sender, data, is_left):
-    side = "LEFT" if is_left else "RIGHT"
-    print(f"[{side}] Raw: {data.hex()}")  # <-- This line prints the raw notification
-    parse_buttons(data, side, is_sideways=True)
-    stick = data[10:13] if is_left else data[13:16]
-    x, y = decode_joystick(stick, is_left, is_sideways=True)
-    gamepad.left_joystick(x_value=x, y_value=y)  # always left stick
-    gamepad.update()
+async def handle_notifications(client, side):
+    async def callback(sender, data):
+        try:
+            parse_buttons(data, side)
+            if side == "LEFT":
+                stick = data[10:13]
+                x, y = decode_joystick(stick)
+                gamepad.left_joystick(x_value=x, y_value=y)
+            else:
+                stick = data[13:16]
+                x, y = decode_joystick(stick)
+                gamepad.right_joystick(x_value=x, y_value=y)
+            gamepad.update()
+        except Exception as e:
+            print(f"[{side}] Error: {e}")
+    await client.start_notify(INPUT_REPORT_UUID, callback)
 
-async def scan_for_joycon():
-    print("🔍 Scanning for Joy-Con (5s)...")
+async def scan_for_joycon(prompt):
+    print(f"\n🔍 Now press a button on your {prompt} Joy-Con...")
     found = None
-    found_printed = False  # track if we've printed found message
 
-    def cb(device, adv):
-        nonlocal found, found_printed
-        m = adv.manufacturer_data.get(JOYCON_MANUFACTURER_ID)
-        if m and m.startswith(JOYCON_MANUFACTURER_PREFIX):
+    def detection_callback(device, adv):
+        data = adv.manufacturer_data.get(JOYCON_MANUFACTURER_ID)
+        if data and data.startswith(JOYCON_MANUFACTURER_PREFIX):
+            nonlocal found
             if not found:
+                print(f"✅ Found {prompt} Joy-Con: {device.address}")
                 found = device
-            if not found_printed:
-                print(f"✅ Found Joy-Con: {device.address}")
-                found_printed = True
 
-    scanner = BleakScanner(cb)
+    scanner = BleakScanner(detection_callback)
     await scanner.start()
-    for _ in range(10):
+    for _ in range(30):
         if found:
             break
         await asyncio.sleep(0.5)
@@ -142,23 +94,31 @@ async def scan_for_joycon():
     return found
 
 async def main():
-    device = await scan_for_joycon()
-    if not device:
-        print("❌ No Joy-Con found.")
+    print("🎮 Starting Dual Joy-Con Controller Setup")
+
+    # Scan and connect to Right Joy-Con
+    right = await scan_for_joycon("RIGHT")
+    if not right:
+        print("❌ Right Joy-Con not found.")
         return
-    client = BleakClient(device.address)
-    await client.connect()
-    print(f"🔗 Connected to Joy-Con at {device.address}")
+    client_r = BleakClient(right.address)
+    await client_r.connect()
+    print(f"🔗 Connected to RIGHT Joy-Con at {right.address}")
+    await handle_notifications(client_r, "RIGHT")
 
-    is_left = input("Is this Joy-Con Left or Right? (L/R): ").strip().upper() == "L"
-    # Removed sideways input — always sideways
-    is_sideways = True
+    # Scan and connect to Left Joy-Con
+    left = await scan_for_joycon("LEFT")
+    if not left:
+        print("❌ Left Joy-Con not found.")
+        return
+    client_l = BleakClient(left.address)
+    await client_l.connect()
+    print(f"🔗 Connected to LEFT Joy-Con at {left.address}")
+    await handle_notifications(client_l, "LEFT")
 
-    def cb(sender, data):
-        asyncio.create_task(notification_handler(sender, data, is_left))
-    await client.start_notify(INPUT_REPORT_UUID, cb)
+    print("🎮 Joy-Cons are now active. Press buttons or move sticks.")
 
-    print("🎮 Joy-Con is now active.")
+    # Keep the loop alive
     while True:
         await asyncio.sleep(1)
 
