@@ -78,9 +78,13 @@ async def notification_handler(sender, data):
         print(f"[RAW] {data.hex()}")
         parse_buttons(data)
 
-        # Decode left and right sticks
+        # Extract the candidate stick data bytes
         left_raw = data[10:13]
         right_raw = data[13:16]
+
+        # DEBUG: print raw stick bytes hex so we can verify
+        print(f"Left stick raw bytes 10:13 = {left_raw.hex()}")
+        print(f"Right stick raw bytes 13:16 = {right_raw.hex()}")
 
         lx, ly = decode_joystick(left_raw)
         rx, ry = decode_joystick(right_raw)
