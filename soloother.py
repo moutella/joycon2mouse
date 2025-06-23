@@ -241,26 +241,36 @@ async def notification_handler(sender, data, is_left):
 
 async def scan_for_joycons():
     print("🔍 Scanning for Joy-Cons...")
-    devices = await BleakScanner.discover()
-    for device in devices:
-        md = device.metadata.get("manufacturer_data", {})
-        for m_id, val in md.items():
-            if m_id == JOYCON_MANUFACTURER_ID and val.startswith(JOYCON_MANUFACTURER_PREFIX):
-                print(f"✅ Found Joy-Con: {device.address}")
+    joycon_devices = []
 
-                # Prompt user for side
-                while True:
-                    side = input("Is this the Left or Right Joy-Con? (L/R): ").strip().upper()
-                    if side in ("L", "R"):
-                        is_left = (side == "L")
-                        joycon_type = "Left" if is_left else "Right"
-                        print(f"Selected {joycon_type} Joy-Con.")
-                        return device, is_left
-                    else:
-                        print("Invalid input. Please enter 'L' or 'R'.")
+    def detection_callback(device, advertisement_data):
+        manufacturer_data = advertisement_data.manufacturer_data
+        if JOYCON_MANUFACTURER_ID in manufacturer_data:
+            data = manufacturer_data[JOYCON_MANUFACTURER_ID]
+            if data.startswith(JOYCON_MANUFACTURER_PREFIX):
+                if device not in joycon_devices:
+                    print(f"✅ Found Joy-Con: {device.address}")
+                    joycon_devices.append(device)
 
-    print("❌ No Joy-Con found.")
-    return None
+    scanner = BleakScanner(detection_callback)
+    await scanner.start()
+    await asyncio.sleep(5)  # adjust scan time as needed
+    await scanner.stop()
+
+    if not joycon_devices:
+        print("❌ No Joy-Con found.")
+        return None
+
+    # Prompt user for side
+    while True:
+        side = input("Is this the Left or Right Joy-Con? (L/R): ").strip().upper()
+        if side in ("L", "R"):
+            is_left = (side == "L")
+            joycon_type = "Left" if is_left else "Right"
+            print(f"Selected {joycon_type} Joy-Con.")
+            return joycon_devices[0], is_left
+        else:
+            print("Invalid input. Please enter 'L' or 'R'.")
 
 
 async def connect_to_joycon(device_info):
