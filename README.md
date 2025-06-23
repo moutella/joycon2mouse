@@ -11,6 +11,8 @@ Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
 You're free to make your own macOS/Linux fork if you want.
 
+Is only compatible with JoyCon 2 because I dont own the ProCon 2 but if someone tests it with this code or I get one then i'll gladly add it.
+
 ---
 
 ## RESEARCH
