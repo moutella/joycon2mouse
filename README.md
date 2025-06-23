@@ -8,7 +8,7 @@ Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims t
 
 ## DISCLAIMER (x2)
 Hey! Noticing some people are actually checking out the repo. Please bear with me while I work on ironing out bugs!!
-Also, about the ProCon2. I could very easily get one to work, I don't have one tho. I'll make a file for this in a sec.
+Also, if you have the Pro Controller 2, please use procon2.py to give me data from it! That way, I can actually make a working file for the ProCon2. Thanks alot!
 
 ## DISCLAIMER
 
