@@ -68,6 +68,8 @@ Something I've documented just in general is something I call BLE DEADMODE. It's
 
 ### 🔹 SOLO Mode:
 
+- IMPORTANT: It'll assume you're using it sideways. Use it in that orientation (or edit the code to not, if you want.)
+
 - Open the script.
 - Put the Joy-Con in sync mode (small black button on the edge).
 - When prompted, enter whether it’s a left or right Joy-Con.
