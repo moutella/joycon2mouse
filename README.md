@@ -36,8 +36,7 @@ PROCON 2 PROGRESS:
 
 ### 🔹 SOLO Mode:
 
-- IMPORTANT: It'll assume you're using it sideways. Use it in that orientation (or edit the code to not, if you want.)
-
+- DISCLAIMER: It'll assume you're using it sideways. Using it upright will have issues (buttons have been swapped around code-wise)
 - Open the script.
 - Put the Joy-Con in sync mode (small colored button on the edge).
 - When prompted, enter whether it’s a left or right Joy-Con.
