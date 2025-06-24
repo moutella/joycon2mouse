@@ -129,7 +129,7 @@ async def main():
         await client.start_notify(INPUT_REPORT_UUID, notification_handler)
         print("🎮 Pro Controller 2 active and logging.")
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.005)
 
     except Exception as e:
         print("❌ Unhandled exception in main():", e)
