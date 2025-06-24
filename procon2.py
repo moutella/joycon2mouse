@@ -1,11 +1,5 @@
-# FILE FOR PEOPLE WITH A PRO CONTROLLER 2. USE THIS FILE TO GIVE ME DATA ABOUT PROCON2, IT DOESNT WORK FOR NORMAL USE YET
-# Hey! If you're using this, thank you so much for helping out!
-# This code is basically just solo.py but it prints raw notification data and has no side/sideways checks.
-# Unsure if stick data will be interpreted correctly as the bits could be in different places.
-# This is where YOU come in! Boot up the script, connect your ProCon2, and move your stick around/press buttons and send me the notif data that comes out!
-# I'll then update the script to adjust to that data, and it should work just fine.
-# Again, thank you for checking out the project! I hope that, when all of this is said and done, it can be fleshed out to be the best it can be!
-# - Frano
+# This file is for: Pro Controller 2.
+# This file is a WIP as I don't have a ProCon2 myself and have to ask people for the data to update the code. Some buttons may not work.
 
 import asyncio
 from bleak import BleakScanner, BleakClient
