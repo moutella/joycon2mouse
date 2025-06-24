@@ -11,10 +11,10 @@ INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 # Button masks
 BUTTONS = {
     "RIGHT": {
-        "A":     (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
-        "B":     (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
-        "X":     (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
-        "Y":     (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
+        "A":     (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
+        "B":     (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
+        "X":     (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
+        "Y":     (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
         "PLUS":  (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
         "STICK": (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB),
         # Don't include "R" (shoulder) or trigger in this dictionary anymore
