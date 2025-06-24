@@ -16,7 +16,7 @@ BUTTONS = {
         "X":     (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
         "Y":     (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
         "PLUS":  (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
-        "STICK": (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB),
+        "STICK": (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB),
         # Don't include "R" (shoulder) or trigger in this dictionary anymore
     },
     "LEFT": {
@@ -25,7 +25,7 @@ BUTTONS = {
         "LEFT":   (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
         "RIGHT":  (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
         "MINUS":  (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
-        "STICK":  (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB),
+        "STICK":  (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB),
         # Don't include "L" (shoulder) or trigger here either
     }
 }
