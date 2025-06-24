@@ -10,23 +10,25 @@ INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 
 # Button masks
 BUTTONS = {
-    "RIGHT": {
-        "A":     (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
-        "B":     (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
-        "X":     (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
-        "Y":     (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
-        "PLUS":  (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
-        "STICK": (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB),
-        # Don't include "R" (shoulder) or trigger in this dictionary anymore
+  "RIGHT": {
+        "A":    (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_B),
+        "B":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_Y),
+        "X":    (0x000200, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
+        "Y":    (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_X),
+        "PLUS": (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_START),
+        "R":    (0x004000, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER),
+        "RT":   0x008000,
+        "STICK":(0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB)
     },
     "LEFT": {
-        "UP":     (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
-        "DOWN":   (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
-        "LEFT":   (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
-        "RIGHT":  (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
+        "UP":     (0x000002, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT),
+        "DOWN":   (0x000004, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT),
+        "LEFT":   (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN),
+        "RIGHT":  (0x000001, vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP),
         "MINUS":  (0x000100, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK),
-        "STICK":  (0x000008, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB),
-        # Don't include "L" (shoulder) or trigger here either
+        "L":      (0x000040, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER),
+        "LT":     0x000080,
+        "STICK":  (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB)
     }
 }
 
