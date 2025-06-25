@@ -77,7 +77,7 @@ def parse_buttons(data):
         button_region = data[3:12]
         state = int.from_bytes(button_region, byteorder='big')
 
-        print(f"🔍 Button region bytes [6:12]: {button_region.hex()} (bitmask: 0x{state:012x})")
+        print(f"🔍 Button region bytes [3:12]: {button_region.hex()} (bitmask: 0x{state:012x})")
 
         for mask, button in BUTTON_MASKS.items():
             if button in ("LT_ANALOG", "RT_ANALOG"):
