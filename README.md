@@ -10,8 +10,6 @@ This project is **Windows-only**, primarily because `vgamepad` (used for virtual
 You're free to make your own macOS/Linux fork if you want.
 
 If the program crashes, it means it couldn't connect to your joycon. Often caused by constantly disconnecting and connecting them, so let them cool down for a bit.
-
-(just rewrote the whole repo, give me a sec while i do everything)
 ---
 
 ## DEPENDENCIES
