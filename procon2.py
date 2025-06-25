@@ -33,8 +33,8 @@ BUTTON_MASKS = {
 
 }
 TRIGGER_MASKS = {
-    "LT": 0x000080,
-    "RT": 0x008000,
+    "LT": 0x000080000000,
+    "RT": 0x008000000000,
 }
 
 gamepad = vg.VX360Gamepad()
@@ -63,23 +63,20 @@ def parse_buttons(data):
         if len(data) < 17:
             return
 
-        # Read 6-byte button region starting at offset 6
         button_region = data[3:9]
         state = int.from_bytes(button_region, byteorder='big')
 
         print(f"🔍 Button region bytes [3:9]: {button_region.hex()} (bitmask: 0x{state:012x})")
 
         for mask, button in BUTTON_MASKS.items():
-            if button in ("LT_ANALOG", "RT_ANALOG"):
-                continue
             if state & mask:
                 gamepad.press_button(button)
             else:
                 gamepad.release_button(button)
 
-        # Analog triggers (assumed locations)
-        left_trigger_val = data[12]
-        right_trigger_val = data[16]
+        # Digital triggers as bitmask flags (full press = 255, released = 0)
+        left_trigger_val = 255 if (state & TRIGGER_MASKS["LT"]) else 0
+        right_trigger_val = 255 if (state & TRIGGER_MASKS["RT"]) else 0
 
         print(f"🎚 Triggers - LT: {left_trigger_val}, RT: {right_trigger_val}")
 
