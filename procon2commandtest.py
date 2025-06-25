@@ -43,6 +43,33 @@ TRIGGER_MASKS = {
 
 gamepad = vg.VX360Gamepad()
 
+IMU_COMMAND_0x02 = bytearray([
+    0x0c, 0x91, 0x00, 0x02, 0x00, 0x04,
+    0x00, 0x00, 0x27,
+    0x00, 0x00, 0x00
+])
+
+SET_PLAYER_LED = bytearray([
+    0x09, 0x91, 0x00, 0x07, 0x00, 0x08,
+    0x00, 0x00,
+    0x01,  # LED bitfield - adjust as needed
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+])
+
+async def write_commands_to_all_writable(client):
+    print("✉️ Writing IMU and LED commands to all writable characteristics...")
+    for service in client.services:
+        for char in service.characteristics:
+            if "write" in char.properties or "write_without_response" in char.properties:
+                try:
+                    print(f"  Writing to characteristic {char.uuid} (properties: {char.properties})")
+                    await client.write_gatt_char(char.uuid, IMU_COMMAND_0x02, response=True)
+                    await asyncio.sleep(0.1)  # slight delay to avoid flooding
+                    await client.write_gatt_char(char.uuid, SET_PLAYER_LED, response=True)
+                    await asyncio.sleep(0.1)
+                except Exception as e:
+                    print(f"    ⚠️ Failed to write to {char.uuid}: {e}")
+
 def decode_joystick(data):
     try:
         if len(data) != 3:
@@ -148,6 +175,12 @@ async def main():
         client = BleakClient(device.address)
         await client.connect()
         print(f"🔗 Connected to {device.address}")
+
+        # Discover services and characteristics
+        await client.get_services()
+
+        # Write commands to every writable characteristic
+        await write_commands_to_all_writable(client)
 
         await client.start_notify(INPUT_REPORT_UUID, notification_handler)
         print("🎮 Pro Controller 2 active and logging.")
