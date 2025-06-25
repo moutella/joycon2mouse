@@ -74,7 +74,7 @@ def parse_buttons(data):
             return
 
         # Button state: 6 bytes from data[3:9]
-        state = int.from_bytes(data[3:6], byteorder='big')
+        state = int.from_bytes(data[3:9], byteorder='big')
 
         for mask, button in BUTTON_MASKS.items():
             if button == "LT_ANALOG" or button == "RT_ANALOG":
