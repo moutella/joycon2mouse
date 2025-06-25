@@ -11,37 +11,31 @@ JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
 INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 
 BUTTON_MASKS = {
-    # Original Joy-Con buttons (unpadded)
-    0x000800: vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
-    0x000400: vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
-    0x000200: vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
-    0x000100: vg.XUSB_BUTTON.XUSB_GAMEPAD_Y,
-    0x000004: vg.XUSB_BUTTON.XUSB_GAMEPAD_START,  # PLUS
-    0x000002: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,   # MINUS
+    # Original Joy-Con buttons (padded)
+    0x00000000000800: vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
+    0x00000000000400: vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
+    0x00000000000200: vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
+    0x00000000000100: vg.XUSB_BUTTON.XUSB_GAMEPAD_Y,
 
-    # Shoulders
-    0x004000: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
-    0x000040: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
+    # Joy-Con Shoulders
+    0x00000040000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
+    0x00000080000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
 
-    # Stick clicks
-    # 0x080000: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB,
-    # 0x000008: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB, Conflict, commenting them out for now
-    
-    0x020000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
-    0x040000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
-    0x010000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
-    0x080000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
+    # Joy-Con D-Pad
+    0x00000002000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
+    0x00000004000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
+    0x00000001000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
+    0x00000008000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
 
-    0x1000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE,         # Home
-    0x2000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,          # Capture
-    0x0100000: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,          # Minus remap
-    0x4000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_START,         # C button remap
+    # Joy-Con misc
+    0x00001000000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE,         # Home
+    0x00002000000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,          # Capture
+    0x00004000000000: vg.XUSB_BUTTON.XUSB_GAMEPAD_START,         # C button remap
 
-    # Optional GL / GR
-    0x020000: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,  # GL (overlaps UP)
-    0x010000: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER, # GR (overlaps DOWN)
+    # GL / GR (ProCon2-specific positions)
+    #0x00000000020000: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,    # GL, no button assign yet
+    #0x00000000010000: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,   # GR, no button assign yet
 }
-
 TRIGGER_MASKS = {
     "LT": 0x000080,
     "RT": 0x008000,
@@ -74,10 +68,10 @@ def parse_buttons(data):
             return
 
         # Read 6-byte button region starting at offset 6
-        button_region = data[3:12]
+        button_region = data[3:9]
         state = int.from_bytes(button_region, byteorder='big')
 
-        print(f"🔍 Button region bytes [3:12]: {button_region.hex()} (bitmask: 0x{state:012x})")
+        print(f"🔍 Button region bytes [3:9]: {button_region.hex()} (bitmask: 0x{state:012x})")
 
         for mask, button in BUTTON_MASKS.items():
             if button in ("LT_ANALOG", "RT_ANALOG"):
