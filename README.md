@@ -1,6 +1,6 @@
 # joycon2py
 
-A lightweight Python script that turns the Joy-Con 2's into working PC controllers.
+A lightweight Python script that turns the Joy-Con 2's (and the Pro Controller 2) into working PC controllers.
 
 Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims to fix that.
 
