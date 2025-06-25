@@ -12,13 +12,7 @@ Hey! Noticing some people are actually checking out the repo. Please bear with m
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
 You're free to make your own macOS/Linux fork if you want.
 
-JoyCon 2's are fully supported, ProCon2 support in progress. Joysticks work fine, some buttons work fine. I don't have the hardware on hand so data is being given from other people.
-
-PROCON 2 PROGRESS:
-- Some buttons work (need more data)
-- Sticks work
-- Reported 0.5 second delay? Unsure if this is an issue with the code or not
-
+JoyCon 2/Pro Controller 2 is supported
 ---
 
 ## DEPENDENCIES
