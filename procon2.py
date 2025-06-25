@@ -70,24 +70,28 @@ def decode_joystick(data):
 
 def parse_buttons(data):
     try:
-        if len(data) < 17:  # Needs to be large enough to hold triggers + buttons + sticks
+        if len(data) < 17:
             return
 
-        # Button state: 6 bytes from data[3:9]
-        state = int.from_bytes(data[3:9], byteorder='big')
+        # Read 6-byte button region starting at offset 6
+        button_region = data[6:12]
+        state = int.from_bytes(button_region, byteorder='big')
+
+        print(f"🔍 Button region bytes [6:12]: {button_region.hex()} (bitmask: 0x{state:012x})")
 
         for mask, button in BUTTON_MASKS.items():
-            if button == "LT_ANALOG" or button == "RT_ANALOG":
-                # We'll handle analog triggers separately below
+            if button in ("LT_ANALOG", "RT_ANALOG"):
                 continue
             if state & mask:
                 gamepad.press_button(button)
             else:
                 gamepad.release_button(button)
 
-        # Extract analog trigger values (example positions, adjust if needed)
-        left_trigger_val = data[9]  # 1 byte analog for L2
-        right_trigger_val = data[16]  # 1 byte analog for R2
+        # Analog triggers (assumed locations)
+        left_trigger_val = data[12]
+        right_trigger_val = data[16]
+
+        print(f"🎚 Triggers - LT: {left_trigger_val}, RT: {right_trigger_val}")
 
         gamepad.left_trigger(left_trigger_val)
         gamepad.right_trigger(right_trigger_val)
@@ -95,7 +99,6 @@ def parse_buttons(data):
     except Exception as e:
         print("⚠️ Error parsing buttons:", e)
         traceback.print_exc()
-
 async def notification_handler(sender, data):
     try:
         print(f"[RAW] {data.hex()}")
