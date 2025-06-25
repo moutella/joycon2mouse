@@ -74,7 +74,7 @@ def parse_buttons(data):
             return
 
         # Read 6-byte button region starting at offset 6
-        button_region = data[6:12]
+        button_region = data[3:12]
         state = int.from_bytes(button_region, byteorder='big')
 
         print(f"🔍 Button region bytes [6:12]: {button_region.hex()} (bitmask: 0x{state:012x})")
