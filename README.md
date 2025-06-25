@@ -1,18 +1,17 @@
 # joycon2py
 
-A lightweight Python script that turns the Joy-Con 2's (and the Pro Controller 2) into working PC controllers.
-
-Joy-Con 2's (Switch 2) currently do not work natively on PC. This project aims to fix that.
+A lightweight Python script that turns the Joy-Con 2's and the Pro Controller 2 into working PC Controllers.
 
 ---
 
-## DISCLAIMERS 
-Hey! Noticing some people are actually checking out the repo. Please bear with me while I work on ironing out bugs!!
+## DISCLAIMER
 
 This project is **Windows-only**, primarily because `vgamepad` (used for virtual controller output) is exclusive to Windows.  
 You're free to make your own macOS/Linux fork if you want.
 
-JoyCon 2/Pro Controller 2 is supported
+If the program crashes, it means it couldn't connect to your joycon. Often caused by constantly disconnecting and connecting them, so let them cool down for a bit.
+
+(just rewrote the whole repo, give me a sec while i do everything)
 ---
 
 ## DEPENDENCIES
@@ -27,41 +26,21 @@ JoyCon 2/Pro Controller 2 is supported
 ---
 
 ## How do I use it?
-
-### 🔹 SOLO Mode:
-
-- DISCLAIMER: It'll assume you're using it sideways. Using it upright will have issues (buttons have been swapped around code-wise)
-- Open the script.
-- Put the Joy-Con in sync mode (small colored button on the edge).
-- When prompted, enter whether it’s a left or right Joy-Con.
-- The script will parse and translate input to a virtual Xbox 360 controller.
-
-### 🔹 PROCON2:
-- Open the script.
-- Put the ProCon2 in sync mode (small black button on the top).
-- The script will parse and translate input to a virtual Xbox 360 controller.
-
-### 🔸 DUAL Mode:
-
-- Open the script.
-- Follow the prompts to pair **each Joy-Con one by one** (left then right).
-- The script merges both Joy-Cons into **one** unified controller.
+- Open the main.py script (dont open solo/duo/pro_logic.py those are modules)
+- Pick your amount of players
+- Pick everyone's controller
+- If using a singular joycon you'll be asked if its Left or Right
+- If using dual joycons itll ask you to pair one joycon then the other
+- If using a pro controller it just asks you to pair it
+- When its all done, you'll have SDL controllers ready for every player to use.
 
 > 💡 Note: Bit layouts differ slightly between left and right Joy-Cons, so correct side pairing is important.
 
 ---
 
-## How does it work?
-
-1. The program scans for Joy-Cons.
-2. Once found, it connects via BLE and listens for input notifications.
-3. These inputs are parsed and translated into controller actions using `vgamepad`.
-
----
-
 ## RESEARCH
 
-Here, I'll document some findings on Joy-Con 2 behavior.
+Here, I'll document some findings on Joy-Con 2 behavior (if anyone is interested)
 
 Something I've documented just in general is something I call BLE DEADMODE. It's where if you keep constantly trying to use the program/connect the joycons a ton, the joycons eventually can't connect unless you let them idle for a bit. This is probably because the bluetooth stuff has to cool down sometimes. So, make sure you're not trying to use the program like twice per second or something
 
@@ -93,11 +72,5 @@ Something I've documented just in general is something I call BLE DEADMODE. It's
 
 Absolutely!  
 Make any changes you like, or submit a pull request if you think it's worth sharing.
-
----
-
-## TODO
-
-- [ ] Add multiplayer mode, connecting and making two controllers in the same file (right now opening the script twice and pairing dif joycon in each one does this, but i think the rework will be a bit cleaner)
 
 ---
