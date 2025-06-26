@@ -66,10 +66,10 @@ async def connect(device):
 # ========== NOTIFICATION HANDLERS ==========
 
 # Each of these will get a tailored handler
-async def handle_single_joycon(client, player: Player):
+async def handle_single_joycon(client, player: Player, upright: bool):
     from solo_logic import handle_single_notification
     async def cb(sender, data):
-        await handle_single_notification(sender, data, player.side == "LEFT", player.gamepad)
+        await handle_single_notification(sender, data, player.side == "LEFT", player.gamepad, upright)
     await client.start_notify(INPUT_REPORT_UUID, cb)
 
 async def handle_dual_joycon(left_client, right_client, player: Player):
@@ -98,14 +98,18 @@ async def setup_player(number):
         if choice == "1":
             side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
             side = "LEFT" if side == "L" else "RIGHT"
+            orientation = input("Orientation? (U=Upright, S=Sideways): ").strip().upper()
+            upright = orientation == "U"
+
             device = await scan_device(f"Player {number} {side} Joy-Con")
             if not device:
                 print("❌ Could not find Joy-Con.")
                 return None
             client = await connect(device)
+
             player = Player(number, "SINGLE_JOYCON", side)
             player.clients = [client]
-            await handle_single_joycon(client, player)
+            await handle_single_joycon(client, player, upright)
             return player
 
         elif choice == "2":
