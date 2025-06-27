@@ -46,7 +46,6 @@ MASKS = {
         "L":      (0x000040, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER),
         "LT":     0x000080,
         "STICK":  (0x000800, vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB),
-        "CAPTURE": (0x002000, vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE)
     }
 }
 def decode_joystick(data, is_left, upright):
