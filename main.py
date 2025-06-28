@@ -89,12 +89,18 @@ async def handle_pro_controller(client, player: Player):
         await handle_pro_notification(sender, data, player.gamepad)
     await client.start_notify(INPUT_REPORT_UUID, cb)
 
+async def handle_gc_controller(client, player: Player):
+    from gc_logic import handle_gc_notification
+    async def cb(sender, data):
+        await handle_gc_notification(sender, data, player.gamepad)
+    await client.start_notify(INPUT_REPORT_UUID, cb)
+
 # ========== MAIN LOGIC ==========
 
 async def setup_player(number):
     print(f"\n🎮 Setting up Player {number}")
     while True:
-        choice = input("Controller Type? (1=Single Joy-Con, 2=Dual Joy-Con, 3=Pro Controller): ").strip()
+        choice = input("Controller Type? (1=Single Joy-Con, 2=Dual Joy-Con, 3=Pro Controller, 4=NSO GameCube): ").strip()
         if choice == "1":
             side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
             side = "LEFT" if side == "L" else "RIGHT"
@@ -137,6 +143,15 @@ async def setup_player(number):
             player = Player(number, "PRO_CONTROLLER")
             player.clients = [client]
             await handle_pro_controller(client, player)
+            return player
+        elif choice == "4":
+            device = await scan_device(f"Player {number} GameCube Controller")
+            if not device:
+                 return None
+            client = await connect(device)
+            player = Player(number, "GC_CONTROLLER")
+            player.clients = [client]
+            await handle_gc_controller(client, player)
             return player
 
         else:
