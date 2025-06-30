@@ -53,7 +53,7 @@ async def handle_gc_notification(sender, data, gamepad):
 
     print(f"\n📥 Notification ({len(data)} bytes): {data.hex()}")
 
-    button_bytes = data[3:10]
+    button_bytes = data[3:9]
     state = int.from_bytes(button_bytes, byteorder='big')
     print(f"🎯 Button state raw: {button_bytes.hex()} | int: {state:#014x}")
 
