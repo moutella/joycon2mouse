@@ -10,6 +10,8 @@ This project is **Windows-only**, primarily because `vgamepad` (used for virtual
 You're free to make your own macOS/Linux fork if you want.
 
 If the program crashes, it means it couldn't connect to your joycon. Often caused by constantly disconnecting and connecting them, so let them cool down for a bit.
+
+Support for the NSO GameCube controller is underway! The current version of the code will decode and parse joysticks, buttons are being worked on.
 ---
 
 ## DEPENDENCIES
