@@ -46,7 +46,7 @@ If the program crashes, it means it couldn't connect to your joycon. Often cause
 
 Here, I'll document some findings on Joy-Con 2 behavior (if anyone is interested)
 
-Something I've documented just in general is something I call BLE DEADMODE. It's where if you keep constantly trying to use the program/connect the joycons a ton, the joycons eventually can't connect unless you let them idle for a bit. This is probably because the bluetooth stuff has to cool down sometimes. So, make sure you're not trying to use the program like twice per second or something
+A documented behaviour of the controllers (every supported controller so JoyCon 2s, Pro Controller 2 etc etc) is that trying to pair them a lot in a short amount of time causes them to not connect until they haven't been attempted to pair for a while. I'm not familiar with BLE but it might just be one of its quirks. So, keep this is mind when connecting your controllers (this is noted at the DISCLAIMERS section)
 
 ### 🔔 Notifications
 
