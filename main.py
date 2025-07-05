@@ -37,7 +37,7 @@ def decode_joystick(data):
         return 0, 0
 
 async def scan_device(prompt="controller"):
-    print(f"🔍 Now press a button on your {prompt}...")
+    print(f"🔍 Now hold the sync button on your {prompt}...")
     found = None
 
     def callback(device, adv):
