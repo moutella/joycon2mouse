@@ -35,7 +35,7 @@ If the program crashes, it means it couldn't connect to your joycon. Often cause
 - Pick everyone's controller
 - If using a singular joycon you'll be asked if its Left or Right
 - If using dual joycons itll ask you to pair one joycon then the other
-- If using a pro controller it just asks you to pair it
+- If using a pro controller/gc controller it just asks you to pair it
 - When its all done, you'll have SDL controllers ready for every player to use.
 
 > 💡 Note: Bit layouts differ slightly between left and right Joy-Cons, so correct side pairing is important.
