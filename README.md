@@ -16,7 +16,7 @@ NSO GC Controller: Semi support (Joysticks confirmed to work, buttons may not be
 
 If the program crashes, it means it couldn't connect to your joycon, often caused by:  
 1. Disconnecting and connecting in a short amount of time. Fix - Wait a little before reconnecting them
-2. Pairing through a button press - this does not work, use the Sync button as directed by the program
+2. Pairing through a button press - this never works, please use the Sync button as directed by the program
 ---
 
 ## DEPENDENCIES
@@ -39,6 +39,8 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 - If using dual joycons itll ask you to pair one joycon then the other
 - If using a pro controller/gc controller it just asks you to pair it
 - When its all done, you'll have SDL controllers ready for every player to use.
+
+- If the controller disconnects, the code will (eventually) notice the disconnection, and promptly wait for you to reconnect your controller. You do this by, again, holding down your sync button.
 
 > 💡 Note: Bit layouts differ slightly between left and right Joy-Cons, so correct side pairing is important.
 
