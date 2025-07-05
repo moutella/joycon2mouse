@@ -30,7 +30,7 @@ If the program crashes, it means it couldn't connect to your joycon. Often cause
 
 ## How do I use it?
 - Download the whole repo (green button titled code, press download zip. you can delete readme.md if you want)
-- Open the main.py script (dont open solo/duo/pro_logic.py those are modules)
+- Open the main.py script (dont open the other scripts those are modules)
 - Pick your amount of players
 - Pick everyone's controller
 - If using a singular joycon you'll be asked if its Left or Right
