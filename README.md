@@ -14,7 +14,9 @@ Joy-Con 2: Full support
 Pro Controller 2: Full support  
 NSO GC Controller: Semi support (Joysticks confirmed to work, buttons may not be mapped/mapped correctly in code yet, requires data sent over by someone with one)  
 
-If the program crashes, it means it couldn't connect to your joycon. Often caused by constantly disconnecting and connecting them, so let them cool down for a bit.
+If the program crashes, it means it couldn't connect to your joycon, often caused by:  
+1. Disconnecting and connecting in a short amount of time. Fix - Wait a little before reconnecting them
+2. Pairing through a button press - this does not work, use the Sync button as directed by the program
 ---
 
 ## DEPENDENCIES
@@ -39,6 +41,13 @@ If the program crashes, it means it couldn't connect to your joycon. Often cause
 - When its all done, you'll have SDL controllers ready for every player to use.
 
 > 💡 Note: Bit layouts differ slightly between left and right Joy-Cons, so correct side pairing is important.
+
+---
+
+## Can I edit the code?
+
+Absolutely!  
+Make any changes you like, or submit a pull request if you think it's worth sharing.
 
 ---
 
@@ -69,12 +78,5 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 > Possibly because the Joy-Con expects a strict command protocol and "crashes" if something's missing or invalid.  
 > We'll need to reverse this format further to find valid LED and IMU enable subcommands.
 > IMU data seems to be the zeroed out bytes, possibly enabled by commands, which we have yet to figure out.
-
----
-
-## Can I edit the code?
-
-Absolutely!  
-Make any changes you like, or submit a pull request if you think it's worth sharing.
 
 ---
