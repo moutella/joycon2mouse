@@ -10,8 +10,8 @@ This project is **Windows-only**, primarily because `vgamepad` (used for virtual
 You're free to make your own macOS/Linux fork if you want.
 
 Supported controllers:
-Joy-Con 2: Full support
-Pro Controller 2: Full support
+Joy-Con 2: Full support,
+Pro Controller 2: Full support,
 NSO GC Controller: Semi support (Joysticks confirmed to work, buttons may not be mapped/mapped correctly in code yet, requires data sent over by someone with one)
 
 If the program crashes, it means it couldn't connect to your joycon. Often caused by constantly disconnecting and connecting them, so let them cool down for a bit.
