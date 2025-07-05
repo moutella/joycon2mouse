@@ -7,16 +7,15 @@ JOYCON_MANUFACTURER_ID = 1363
 JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
 INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 
-# Player config
+used_addresses = set()
+
 class Player:
     def __init__(self, number, controller_type, side=None):
         self.number = number
-        self.type = controller_type  # SINGLE_JOYCON, DUAL_JOYCON, PRO_CONTROLLER
-        self.side = side             # LEFT or RIGHT (for single Joy-Con)
-        self.clients = []            # List of BleakClient objects
+        self.type = controller_type
+        self.side = side
+        self.clients = []
         self.gamepad = vg.VX360Gamepad()
-
-# ========== COMMON FUNCTIONS ==========
 
 def decode_joystick(data):
     try:
@@ -36,35 +35,64 @@ def decode_joystick(data):
         return 0, 0
 
 async def scan_device(prompt="controller"):
-    print(f"🔍 Now hold the sync button on your {prompt}...")
-    found = None
+    print(f"\n🔍 Searching for your {prompt} (press sync)...")
+    found_devices = []
+    device_event = asyncio.Event()
 
     def callback(device, adv):
-        nonlocal found
+        if device.address in used_addresses:
+            return
         data = adv.manufacturer_data.get(JOYCON_MANUFACTURER_ID)
         if data and data.startswith(JOYCON_MANUFACTURER_PREFIX):
-            if not found:
-                found = device
-                print(f"✅ Found {prompt} at {device.address}")
+            if not any(d.address == device.address for d in found_devices):
+                found_devices.append(device)
+                print(f"  Found {device.name or 'Unknown'} ({device.address})")
+                device_event.set()
 
     scanner = BleakScanner(callback)
     await scanner.start()
-    for _ in range(20):
-        if found:
-            break
-        await asyncio.sleep(0.5)
-    await scanner.stop()
-    return found
 
-async def connect(device):
+    selected_device = None
+    try:
+        while True:
+            await device_event.wait()
+            device_event.clear()
+            if found_devices:
+                selected_device = found_devices[0]
+                break
+    finally:
+        await scanner.stop()
+
+    if selected_device:
+        print(f"🎮 Selected {selected_device.name or 'Unknown'} ({selected_device.address})")
+    else:
+        print("❌ No device found.")
+
+    return selected_device
+
+async def connect_and_setup(device, player, handler_func, *handler_args):
     client = BleakClient(device.address)
     await client.connect()
-    print(f"🔗 Connected to {device.address}")
+    client._device = device
+    await handler_func(client, player, *handler_args)
+    player.clients.append(client)
+    print(f"✅ Connected to {device.address}")
     return client
 
-# ========== NOTIFICATION HANDLERS ==========
+async def maintain_connection_loop(client, device, player, handler_func, *handler_args):
+    while True:
+        try:
+            if not client.is_connected:
+                await client.connect()
+                await handler_func(client, player, *handler_args)
+                print(f"🔄 Reconnected to {device.address}")
+            await asyncio.sleep(1)
+        except Exception as e:
+            print(f"⚠️ Connection lost or error: {e}")
+            if client.is_connected:
+                await client.disconnect()
+            await asyncio.sleep(5)
 
-# Each of these will get a tailored handler
 async def handle_single_joycon(client, player: Player, upright: bool):
     from solo_logic import handle_single_notification
     async def cb(sender, data):
@@ -89,50 +117,6 @@ async def handle_gc_controller(client, player: Player):
         await handle_gc_notification(sender, data, player.gamepad)
     await client.start_notify(INPUT_REPORT_UUID, cb)
 
-# ========== CONNECTION MAINTAINER ==========
-
-async def maintain_connection(device, player, handler_func, *handler_args):
-    client = None
-    while True:
-        try:
-            if client is None or not client.is_connected:
-                if client:
-                    await client.disconnect()
-                print(f"🔗 Connecting to {device.address}...")
-                client = BleakClient(device.address)
-                await client.connect()
-                print(f"✅ Connected to {device.address}")
-
-                # Track client in player.clients list (avoid duplicates)
-                if client not in player.clients:
-                    player.clients.append(client)
-
-                # Start notifications with handler callback
-                await handler_func(client, player, *handler_args)
-
-            # Keep connection alive by sleeping, can add heartbeat here if needed
-            await asyncio.sleep(1)
-
-            if not client.is_connected:
-                raise Exception("Connection lost")
-
-        except Exception as e:
-            print(f"⚠️ Connection lost or error: {e}")
-            print("⏳ Waiting for controller to reconnect... (hold down sync button)")
-
-            # Disconnect cleanly if still connected
-            if client and client.is_connected:
-                await client.disconnect()
-            client = None
-
-            # Remove disconnected client from player.clients
-            player.clients = [c for c in player.clients if c.is_connected]
-
-            # Wait before retrying connection or rescanning
-            await asyncio.sleep(5)
-
-# ========== MAIN LOGIC ==========
-
 async def setup_player(number):
     print(f"\n🎮 Setting up Player {number}")
     while True:
@@ -145,62 +129,61 @@ async def setup_player(number):
 
             device = await scan_device(f"Player {number} {side} Joy-Con")
             if not device:
-                print("❌ Could not find Joy-Con.")
                 return None
+            used_addresses.add(device.address)
 
             player = Player(number, "SINGLE_JOYCON", side)
-            player.clients = []
-
-            # Launch maintain_connection in background
-            asyncio.create_task(maintain_connection(device, player, handle_single_joycon, upright))
+            client = await connect_and_setup(device, player, handle_single_joycon, upright)
+            asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
             return player
 
         elif choice == "2":
-            right_device = await scan_device(f"Player {number} RIGHT Joy-Con")
-            if not right_device:
-                print("❌ Could not find RIGHT Joy-Con.")
+            right = await scan_device(f"Player {number} RIGHT Joy-Con")
+            if not right:
                 return None
-            left_device = await scan_device(f"Player {number} LEFT Joy-Con")
-            if not left_device:
-                print("❌ Could not find LEFT Joy-Con.")
+            used_addresses.add(right.address)
+
+            left = await scan_device(f"Player {number} LEFT Joy-Con")
+            if not left:
                 return None
+            used_addresses.add(left.address)
 
             player = Player(number, "DUAL_JOYCON")
-            player.clients = []
-
-            # Launch maintain_connection tasks for both sides
-            asyncio.create_task(maintain_connection(right_device, player, handle_dual_joycon, "RIGHT"))
-            asyncio.create_task(maintain_connection(left_device, player, handle_dual_joycon, "LEFT"))
+            right_client = await connect_and_setup(right, player, handle_dual_joycon, "RIGHT")
+            left_client = await connect_and_setup(left, player, handle_dual_joycon, "LEFT")
+            asyncio.create_task(maintain_connection_loop(right_client, right, player, handle_dual_joycon, "RIGHT"))
+            asyncio.create_task(maintain_connection_loop(left_client, left, player, handle_dual_joycon, "LEFT"))
             return player
 
         elif choice == "3":
             device = await scan_device(f"Player {number} Pro Controller")
             if not device:
-                print("❌ Could not find Pro Controller.")
                 return None
+            used_addresses.add(device.address)
+
             player = Player(number, "PRO_CONTROLLER")
-            player.clients = []
-            asyncio.create_task(maintain_connection(device, player, handle_pro_controller))
+            client = await connect_and_setup(device, player, handle_pro_controller)
+            asyncio.create_task(maintain_connection_loop(client, device, player, handle_pro_controller))
             return player
 
         elif choice == "4":
             device = await scan_device(f"Player {number} GameCube Controller")
             if not device:
-                print("❌ Could not find GameCube Controller.")
                 return None
+            used_addresses.add(device.address)
+
             player = Player(number, "GC_CONTROLLER")
-            player.clients = []
-            asyncio.create_task(maintain_connection(device, player, handle_gc_controller))
+            client = await connect_and_setup(device, player, handle_gc_controller)
+            asyncio.create_task(maintain_connection_loop(client, device, player, handle_gc_controller))
             return player
 
         else:
-            print("Invalid selection. Try again.")
+            print("❌ Invalid choice.")
 
 async def main():
     try:
         players = []
         count = int(input("How many players? ").strip())
-
         for i in range(1, count + 1):
             player = await setup_player(i)
             if not player:
@@ -208,7 +191,7 @@ async def main():
                 return
             players.append(player)
 
-        print("🎮 All players connected (or trying to reconnect). Press Ctrl+C to stop.")
+        print("🎮 All players connected. Press Ctrl+C to stop.")
         while True:
             await asyncio.sleep(1)
 
@@ -216,7 +199,6 @@ async def main():
         print("\nExiting...")
 
     finally:
-        # Clean up all clients
         for p in players:
             for c in p.clients:
                 if c.is_connected:
