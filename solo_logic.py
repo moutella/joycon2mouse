@@ -6,6 +6,44 @@ SR_MASK = 0x001000
 LEFT_SL_MASK = 0x000020
 LEFT_SR_MASK = 0x000010
 
+def decode_gyro(data: bytes):
+    if len(data) < 0x3C:
+        return None
+
+    def to_signed_16(b1, b2):
+        return int.from_bytes(bytes([b1, b2]), byteorder='little', signed=True)
+
+    gyro_x_raw = to_signed_16(data[0x36], data[0x37])
+    gyro_y_raw = to_signed_16(data[0x38], data[0x39])
+    gyro_z_raw = to_signed_16(data[0x3A], data[0x3B])
+
+    scale = 360 / 48000
+
+    gyro_x = gyro_x_raw * scale
+    gyro_y = gyro_y_raw * scale
+    gyro_z = gyro_z_raw * scale
+
+    return gyro_x, gyro_y, gyro_z
+
+def decode_accel(data: bytes):
+    if len(data) < 0x36:  # accel bytes end at 0x35 (0x30..0x35)
+        return None
+
+    def to_signed_16(b1, b2):
+        return int.from_bytes(bytes([b1, b2]), byteorder='little', signed=True)
+
+    accel_x_raw = to_signed_16(data[0x30], data[0x31])
+    accel_y_raw = to_signed_16(data[0x32], data[0x33])
+    accel_z_raw = to_signed_16(data[0x34], data[0x35])
+
+    scale = 1 / 4096  # 4096 = 1G
+
+    accel_x = accel_x_raw * scale
+    accel_y = accel_y_raw * scale
+    accel_z = accel_z_raw * scale
+
+    return accel_x, accel_y, accel_z
+
 UPRIGHT_MASKS = {
     "RIGHT": {
         "A":    (0x000400, vg.XUSB_BUTTON.XUSB_GAMEPAD_A),
@@ -89,6 +127,17 @@ async def handle_single_notification(sender, data, is_left, gamepad, upright):
         gamepad._last_joystick = (0, 0)
 
     changed = False
+
+
+
+    # Decode and print gyro values
+    gyro = decode_gyro(data)
+    if gyro is not None:
+        gyro_x, gyro_y, gyro_z = gyro
+
+    accel = decode_accel(data)
+    if accel is not None:
+        accel_x, accel_y, accel_z = accel
 
     # === TRIGGERS & SHOULDERS ===
     # Upright config triggers/shoulders
