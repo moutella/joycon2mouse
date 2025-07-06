@@ -69,9 +69,6 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 - `0000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000` – Unknown (possibly IMU/battery?)  
 
 > ⚠️ Haven't found gyro, accel, or battery data yet.  
-> Writing a **LED command works**, but it causes notifications to stop.  
-> Possibly because the Joy-Con expects a strict command protocol and "crashes" if something's missing or invalid.  
-> We'll need to reverse this format further to find valid LED and IMU enable subcommands.
-> IMU data seems to be the zeroed out bytes, possibly enabled by commands, which we have yet to figure out.
+> LED commands work but I haven't added a command for IMU/Mouse which I assume is what would enable bits in this big zero plane. We'll see! 
 
 ---
