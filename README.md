@@ -20,7 +20,9 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 
 Recently, GYRO/ACCEL data has been found, alongside some other stuff. However, I can't really do much with it.  
 Why? Simple answer: VGAMEPAD SUCKS!!! So if we want a better solution, we need to find a better ALTERNATIVE. That alternative may not even work with python AT ALL.  
-So, until a decent alternative is found, this will stay.  
+So, until a decent alternative is found, this will stay. 
+
+However, for anyone who's willing, ive included the decoders in solo_logic.py
 ---
 
 ## DEPENDENCIES
@@ -70,9 +72,9 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 - `00000000` – Button inputs  
 - `e0ff0ffff77f` – Unknown (possibly battery or sensor flags?)  
 - `20e879` – Stick data  
-- `0000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000` – Unknown (possibly IMU/battery?)  
+- `0000000000000000000000000000005d0e` – Unknown (possibly IMU/battery?)
+- `000000000000000001000000000000000000000000000000000000000000` - Here it's just zeroes but if you put in the IMU command, it'll start giving you IMU data.
 
-> ⚠️ Haven't found gyro, accel, or battery data yet.  
-> LED commands work but I haven't added a command for IMU/Mouse which I assume is what would enable bits in this big zero plane. We'll see! 
+> The command for IMU data is: 
 
 ---
