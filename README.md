@@ -73,8 +73,5 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 - `e0ff0ffff77f` – Unknown (possibly battery or sensor flags?)  
 - `20e879` – Stick data  
 - `0000000000000000000000000000005d0e` – Unknown (possibly IMU/battery?)
-- `000000000000000001000000000000000000000000000000000000000000` - Here it's just zeroes but if you put in the IMU command, it'll start giving you IMU data.
-
-> The command for IMU data is: 
-
+- `000000000000000001000000000000000000000000000000000000000000` - Here it's just zeroes but if you put in the IMU command, it'll start giving you IMU data. (command included in main)
 ---
