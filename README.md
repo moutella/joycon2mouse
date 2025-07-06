@@ -43,14 +43,7 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 - If the controller disconnects, the code will (eventually) notice the disconnection, and promptly wait for you to reconnect your controller. You do this by, again, holding down your sync button.
 
 > 💡 Note: Bit layouts differ slightly between left and right Joy-Cons, so correct side pairing is important.
-
----
-
-## Can I edit the code?
-
-Absolutely!  
-Make any changes you like, or submit a pull request if you think it's worth sharing.
-
+> 
 ---
 
 ## RESEARCH
