@@ -18,9 +18,9 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 1. Disconnecting and connecting in a short amount of time. Fix - Wait a little before reconnecting them
 2. Pairing through a button press - this never works, please use the Sync button as directed by the program
 
-Recently, GYRO/ACCEL data has been found, alongside some other stuff. A new patch will soon come out that'll talk with this data and turn it into mouse input.  
+Recently, GYRO/ACCEL data has been found, alongside some other stuff. However, I can't really do much with it.
 Why? Simple answer: VGAMEPAD SUCKS!!! So if we want a better solution, we need to find a better ALTERNATIVE. That alternative may not even work with python AT ALL.  
-So, until a decent alternative is found, an option will be there to enable this feature.  
+So, until a decent alternative is found, this will stay.
 ---
 
 ## DEPENDENCIES
