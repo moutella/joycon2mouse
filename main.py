@@ -89,6 +89,13 @@ async def write_command(client, command_id, subcommand_id, buffer):
 async def play_vibration_preset(client, preset_id):
     await write_command(client, COMMAND_VIBRATION, SUBCOMMAND_PLAY_VIBRATION_PRESET, preset_id.to_bytes())
 
+async def enable_imu(client):
+    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
+    await asyncio.sleep(0.5)
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
+
 async def set_leds(client, player_number):
     #Repoduce switch led patterns for up to 8 players https://en-americas-support.nintendo.com/app/answers/detail/a_id/22424
     led_pattern_by_played_id = {
@@ -112,6 +119,7 @@ async def connect_and_setup(device, player, handler_func, *handler_args):
     await client.connect()
     client._device = device
     await set_leds(client, player.number)
+    await enable_imu(client)
     await handler_func(client, player, *handler_args)
     player.clients.append(client)
     print(f"✅ Connected to {device.address}")
