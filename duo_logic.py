@@ -29,26 +29,82 @@ def decode_joystick(data):
 async def handle_duo_notification(sender, data, side, gamepad):
     offset = 4 if side == "LEFT" else 3
     state = int.from_bytes(data[offset:offset+3], 'big')
+    changed = False
 
-    # Shoulder + Trigger
+    # Init previous state if not present
+    if not hasattr(gamepad, "_last_inputs"):
+        gamepad._last_inputs = {
+            "buttons": {},
+            "left_trigger": -1,
+            "right_trigger": -1,
+            "left_joystick": (None, None),
+            "right_joystick": (None, None),
+            "left_shoulder": None,
+            "right_shoulder": None,
+        }
+
+    last = gamepad._last_inputs
+
+    # Shoulder + Trigger + Stick
     if side == "LEFT":
-        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000040 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-        gamepad.left_trigger(255 if state & 0x000080 else 0)
+        # Shoulder
+        press = bool(state & 0x000040)
+        if press != last["left_shoulder"]:
+            if press:
+                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
+            else:
+                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
+            last["left_shoulder"] = press
+            changed = True
+
+        # Trigger
+        trigger_val = 255 if state & 0x000080 else 0
+        if trigger_val != last["left_trigger"]:
+            gamepad.left_trigger(trigger_val)
+            last["left_trigger"] = trigger_val
+            changed = True
+
+        # Joystick
         stick = data[10:13]
         x, y = decode_joystick(stick)
-        gamepad.left_joystick(x_value=x, y_value=y)
-    else:
-        gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x004000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-        gamepad.right_trigger(255 if state & 0x008000 else 0)
+        if (x, y) != last["left_joystick"]:
+            gamepad.left_joystick(x_value=x, y_value=y)
+            last["left_joystick"] = (x, y)
+            changed = True
+
+    else:  # RIGHT
+        press = bool(state & 0x004000)
+        if press != last["right_shoulder"]:
+            if press:
+                gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+            else:
+                gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+            last["right_shoulder"] = press
+            changed = True
+
+        trigger_val = 255 if state & 0x008000 else 0
+        if trigger_val != last["right_trigger"]:
+            gamepad.right_trigger(trigger_val)
+            last["right_trigger"] = trigger_val
+            changed = True
+
         stick = data[13:16]
         x, y = decode_joystick(stick)
-        gamepad.right_joystick(x_value=x, y_value=y)
+        if (x, y) != last["right_joystick"]:
+            gamepad.right_joystick(x_value=x, y_value=y)
+            last["right_joystick"] = (x, y)
+            changed = True
 
-    # Digital buttons
+    # Digital Buttons
     for name, (mask, btn) in BUTTONS[side].items():
-        if state & mask:
-            gamepad.press_button(btn)
-        else:
-            gamepad.release_button(btn)
+        pressed = bool(state & mask)
+        if last["buttons"].get(btn) != pressed:
+            if pressed:
+                gamepad.press_button(btn)
+            else:
+                gamepad.release_button(btn)
+            last["buttons"][btn] = pressed
+            changed = True
 
-    gamepad.update()
+    if changed:
+        gamepad.update()
