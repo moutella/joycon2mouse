@@ -79,43 +79,86 @@ async def handle_single_notification(sender, data, is_left, gamepad, upright):
     offset = 4 if is_left else 3
     state = int.from_bytes(data[offset:offset+3], 'big')
 
-    # === BUTTON MAPPINGS ===
+    # Initialize state storage if missing
+    if not hasattr(gamepad, "_last_buttons_state"):
+        gamepad._last_buttons_state = 0
+    if not hasattr(gamepad, "_last_left_trigger"):
+        gamepad._last_left_trigger = 0
+    if not hasattr(gamepad, "_last_right_trigger"):
+        gamepad._last_right_trigger = 0
+    if not hasattr(gamepad, "_last_joystick"):
+        gamepad._last_joystick = (0, 0)
+
+    changed = False
+
+    # === TRIGGERS & SHOULDERS ===
+    # Upright config triggers/shoulders
     if upright:
-        # Remap SL/SR to L/R shoulders upright
-        if is_left:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000040 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x004000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-            gamepad.left_trigger(255 if state & 0x000080 else 0)
-        else:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000040 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x004000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-            gamepad.right_trigger(255 if state & 0x008000 else 0)
+        new_left_trigger = 255 if state & 0x000080 else 0
+        new_right_trigger = 255 if state & 0x008000 else 0
+        new_left_shoulder = bool(state & 0x000040)
+        new_right_shoulder = bool(state & 0x004000)
     else:
-        # SL/SR as shoulders (sideways config)
-        if is_left:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x000020 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x000010 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-            gamepad.left_trigger(255 if state & MASKS["LEFT"]["LT"] else 0)
+        new_left_trigger = 255 if state & MASKS["LEFT"]["LT"] else 0
+        new_right_trigger = 255 if state & MASKS["RIGHT"]["RT"] else 0
+        new_left_shoulder = bool(state & (0x000020 if is_left else 0x002000))
+        new_right_shoulder = bool(state & (0x000010 if is_left else 0x001000))
+
+    # Update triggers
+    if new_left_trigger != gamepad._last_left_trigger:
+        gamepad.left_trigger(new_left_trigger)
+        gamepad._last_left_trigger = new_left_trigger
+        changed = True
+
+    if new_right_trigger != gamepad._last_right_trigger:
+        gamepad.right_trigger(new_right_trigger)
+        gamepad._last_right_trigger = new_right_trigger
+        changed = True
+
+    # Update shoulder buttons
+    # Left shoulder
+    if new_left_shoulder != getattr(gamepad, "_last_left_shoulder", None):
+        if new_left_shoulder:
+            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
         else:
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER) if state & 0x002000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
-            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER) if state & 0x001000 else gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
-            gamepad.right_trigger(255 if state & MASKS["RIGHT"]["RT"] else 0)
+            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER)
+        gamepad._last_left_shoulder = new_left_shoulder
+        changed = True
+
+    # Right shoulder
+    if new_right_shoulder != getattr(gamepad, "_last_right_shoulder", None):
+        if new_right_shoulder:
+            gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+        else:
+            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER)
+        gamepad._last_right_shoulder = new_right_shoulder
+        changed = True
 
     # === BUTTONS ===
     button_map = UPRIGHT_MASKS[side] if upright else MASKS[side]
-
     for name, val in button_map.items():
         if name in ["L", "R", "LT", "RT"]:
             continue  # Already handled above
         mask, vg_btn = val
-        if state & mask:
-            gamepad.press_button(vg_btn)
-        else:
-            gamepad.release_button(vg_btn)
+        pressed = bool(state & mask)
+        last_pressed = getattr(gamepad, f"_last_btn_{vg_btn}", None)
+        if pressed != last_pressed:
+            if pressed:
+                gamepad.press_button(vg_btn)
+            else:
+                gamepad.release_button(vg_btn)
+            setattr(gamepad, f"_last_btn_{vg_btn}", pressed)
+            changed = True
 
     # === STICK ===
     stick = data[10:13] if is_left else data[13:16]
     x, y = decode_joystick(stick, is_left, upright)
-    gamepad.left_joystick(x_value=x, y_value=y)
-    gamepad.update()
 
+    if (x, y) != gamepad._last_joystick:
+        gamepad.left_joystick(x_value=x, y_value=y)
+        gamepad._last_joystick = (x, y)
+        changed = True
+
+    # Only update if something changed
+    if changed:
+        gamepad.update()
