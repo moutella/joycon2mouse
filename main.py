@@ -5,8 +5,18 @@ import vgamepad as vg
 # Constants
 JOYCON_MANUFACTURER_ID = 1363
 JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
+
+# BLE GATT Characteristics UUID
 INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
 WRITE_COMMAND_UUID = "649d4ac9-8eb7-4e6c-af44-1ea54fe5f005"
+
+# COMMANDS
+COMMAND_LEDS = 0x09
+COMMAND_VIBRATION = 0x0A
+
+# SUBCOMMANDS
+SUBCOMMAND_SET_PLAYER_LEDS = 0x07
+SUBCOMMAND_PLAY_VIBRATION_PRESET = 0x02
 
 used_addresses = set()
 
@@ -71,6 +81,14 @@ async def scan_device(prompt="controller"):
 
     return selected_device
 
+async def write_command(client, command_id, subcommand_id, buffer):
+    # Pad buffer to 8 bytes minimum because some buffer lengths seems to crash
+    buffer = buffer.ljust(8, b'\0')
+    await client.write_gatt_char(WRITE_COMMAND_UUID, command_id.to_bytes() + b"\x91\x01" + subcommand_id.to_bytes() + b"\x00" + len(buffer).to_bytes() + b"\x00\x00" + buffer)
+
+async def play_vibration_preset(client, preset_id):
+    await write_command(client, COMMAND_VIBRATION, SUBCOMMAND_PLAY_VIBRATION_PRESET, preset_id.to_bytes())
+
 async def set_leds(client, player_number):
     #Repoduce switch led patterns for up to 8 players https://en-americas-support.nintendo.com/app/answers/detail/a_id/22424
     led_pattern_by_played_id = {
@@ -87,7 +105,7 @@ async def set_leds(client, player_number):
     if player_number > 8:
         player_number = 8
 
-    await client.write_gatt_char(WRITE_COMMAND_UUID, b"\x09\x91\x00\x07\x00\x08\x00\x00" + led_pattern_by_played_id[player_number] + b"\x00\x00\x00\x00\x00\x00\x00")
+    await write_command(client, COMMAND_LEDS, SUBCOMMAND_SET_PLAYER_LEDS, led_pattern_by_played_id[player_number])
 
 async def connect_and_setup(device, player, handler_func, *handler_args):
     client = BleakClient(device.address)
