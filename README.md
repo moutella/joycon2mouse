@@ -54,7 +54,7 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 
 ### 🔔 Notifications
 
-**Example notification:**
+**Example notification from Joy-Con 2 (Pro Controller 2/GC Controller notifs vary in placement, but are similar):**
 
 35ae0000000000e0ff0ffff77f20e8790000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000
 
