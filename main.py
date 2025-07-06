@@ -6,6 +6,7 @@ import vgamepad as vg
 JOYCON_MANUFACTURER_ID = 1363
 JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
 INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
+WRITE_COMMAND_UUID = "649d4ac9-8eb7-4e6c-af44-1ea54fe5f005"
 
 used_addresses = set()
 
@@ -70,10 +71,29 @@ async def scan_device(prompt="controller"):
 
     return selected_device
 
+async def set_leds(client, player_number):
+    #Repoduce switch led patterns for up to 8 players https://en-americas-support.nintendo.com/app/answers/detail/a_id/22424
+    led_pattern_by_played_id = {
+        1: b'\x01',
+        2: b'\x03',
+        3: b'\x07',
+        4: b'\x0F',
+        5: b'\x09',
+        6: b'\x05',
+        7: b'\x0D',
+        8: b'\x06',
+    }
+
+    if player_number > 8:
+        player_number = 8
+
+    await client.write_gatt_char(WRITE_COMMAND_UUID, b"\x09\x91\x00\x07\x00\x08\x00\x00" + led_pattern_by_played_id[player_number] + b"\x00\x00\x00\x00\x00\x00\x00")
+
 async def connect_and_setup(device, player, handler_func, *handler_args):
     client = BleakClient(device.address)
     await client.connect()
     client._device = device
+    await set_leds(client, player.number)
     await handler_func(client, player, *handler_args)
     player.clients.append(client)
     print(f"✅ Connected to {device.address}")
