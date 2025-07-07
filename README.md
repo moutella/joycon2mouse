@@ -22,7 +22,9 @@ Recently, GYRO/ACCEL data has been found, alongside some other stuff. However, I
 Why? Simple answer: VGAMEPAD SUCKS!!! So if we want a better solution, we need to find a better ALTERNATIVE. That alternative may not even work with python AT ALL.  
 So, until a decent alternative is found, this will stay. 
 
-However, for anyone who's willing, ive included the decoders in solo_logic.py
+(i feel like sending it through UDP/Dolphin's AIS/DSU would be kinda cool but idk how to set that up. if anyone else does, feel free to make a fork outta that)
+
+However, for anyone who's willing, ive included the decoders in solo_logic.py 
 ---
 
 ## DEPENDENCIES
