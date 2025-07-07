@@ -75,8 +75,8 @@ A documented behaviour of the controllers (every supported controller so JoyCon 
 - `35` – Header  
 - `ae00` – Timestamp (seems to increment every ~minute)  
 - `00000000` – Button inputs  
-- `e0ff0ffff77f` – Unknown (possibly battery or sensor flags?)  
+- `e0ff0ffff77f` – Unknown (probably not important imo)
 - `20e879` – Stick data  
-- `0000000000000000000000000000005d0e` – Unknown (possibly IMU/battery?)
+- `0000000000000000000000000000005d0e` – Unknown (mouse?? maybe??)
 - `000000000000000001000000000000000000000000000000000000000000` - Here it's just zeroes but if you put in the IMU command, it'll start giving you IMU data. (command included in main)
 ---
