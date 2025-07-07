@@ -57,26 +57,60 @@ Simple answer: vgamepad doesn't support gyroaccel. Honestly, vgamepad seems very
 > 
 ---
 
-## RESEARCH
+# Joy-Con 2 BLE Notification Research
 
-Here, I'll document some findings on Joy-Con 2 behavior (if anyone is interested)
+This document outlines some findings related to Joy-Con 2 BLE input behavior. If you're developing or reverse-engineering Joy-Con 2, Pro Controller 2, or other supported Nintendo controllers over BLE, this may be useful.
 
-A documented behaviour of the controllers (every supported controller so JoyCon 2s, Pro Controller 2 etc etc) is that trying to pair them a lot in a short amount of time causes them to not connect until they haven't been attempted to pair for a while. I'm not familiar with BLE but it might just be one of its quirks. So, keep this is mind when connecting your controllers (this is noted at the DISCLAIMERS section)
+## ⚠️ Behavior Quirks
 
-### 🔔 Notifications
+A notable quirk of these controllers is that if you attempt to connect or pair them repeatedly in a short time span, they may stop responding or fail to connect entirely for several minutes. This appears to be a controller-level cooldown behavior rather than an OS/BLE stack issue.
 
-**Example notification from Joy-Con 2 (Pro Controller 2/GC Controller notifs vary in placement, but are similar):**
+**If your controller stops connecting:**  
+Wait a few minutes before trying again. It should recover on its own.
 
-35ae0000000000e0ff0ffff77f20e8790000000000000000000000000000005d0e000000000000000001000000000000000000000000000000000000000000
+## 🔔 BLE Notification (with IMU enabled, Left Joy-Con)
+
+Here’s an example notification received from a Joy-Con 2 via BLE, with the IMU command sent. (Pro Controller 2 and GC Controller notifications follow similar layouts but may shift certain fields.)
+
+08670000000000e0ff0ffff77f23287a0000000000000000000000000000005f0e007907000000000001ce7b52010500beffb501ee0ffeff04000200000000
 
 
-**Breakdown:**
+### 📦 Field Breakdown (based on known Joy-Con 2 layout)
+huge thanks to [@german77](https://github.com/german77) for providing me with the notification layout below!!
 
-- `35` – Header  
-- `ae00` – Timestamp (seems to increment every ~minute)  
-- `00000000` – Button inputs  
-- `e0ff0ffff77f` – Unknown (probably not important imo)
-- `20e879` – Stick data  
-- `0000000000000000000000000000005d0e` – Unknown (mouse?? maybe??)
-- `000000000000000001000000000000000000000000000000000000000000` - Here it's just zeroes but if you put in the IMU command, it'll start giving you IMU data. (command included in main)
+| Offset | Size | Field              | Raw Value     | Parsed / Interpreted Value                    |
+|--------|------|--------------------|----------------|-----------------------------------------------|
+| `0x00` | 4    | **Packet ID**      | `08 67 00 00`  | `0x00006708` → **26376**                      |
+| `0x04` | 4    | **Buttons**        | `00 00 00 00`  | No buttons pressed                            |
+| `0x08` | 3    | **Left Stick**     | `e0 ff 0f`     | X: `0x0FF0` = **4080**, Y: `0x0FE0` = **4064** |
+| `0x0B` | 3    | **Right Stick**    | `ff f7 7f`     | **Unused** on Left Joy-Con — ignore/garbage   |
+| `0x0E` | 17   | *(Reserved)*       | `23 28 7A ...` | Reserved or internal use                      |
+| `0x2E` | 2    | **Temperature**    | `5f 0e`        | `0x0E5F` = 3679 → **~54°C**                   |
+| `0x30` | 2    | **Accel X**        | `00 79`        | `0x7900` = **30976** → ~7.56G (likely unscaled) |
+| `0x32` | 2    | **Accel Y**        | `07 00`        | `0x0007` = **7** → ~0.0017G                    |
+| `0x34` | 2    | **Accel Z**        | `00 00`        | 0                                              |
+| `0x36` | 2    | **Gyro X**         | `01 ce`        | `0xCE01` = **52737** → ~395°/s                 |
+| `0x38` | 2    | **Gyro Y**         | `7b 52`        | `0x527B` = **21115** → ~158°/s                 |
+| `0x3A` | 2    | **Gyro Z**         | `01 05`        | `0x0501` = **1281** → ~9.6°/s                  |
+
 ---
+
+### 🧠 Technical Notes
+
+- **Left Joy-Con** does not have a right stick, so data at offset `0x0B–0x0D` is **not meaningful**. For completeness, it’s still included in the layout but should be ignored in parsing logic.
+- **Battery voltage** (`0x1F`) appears to be zero in this packet. Normally, this reports in millivolts (e.g., `3000 = 3.0V`), but `0x0000` likely means the value is not available at the time of sampling.
+- **Stick values** are 12-bit X/Y pairs packed across 3 bytes:
+  - X: upper 12 bits of first 1.5 bytes
+  - Y: lower 12 bits of next 1.5 bytes
+- **IMU data** (Accel + Gyro) uses 16-bit signed integers:
+  - Accelerometer: `4096 = 1G`
+  - Gyroscope: `48000 = 360°/s`
+- **Temperature** is calculated with:  
+  `25°C + (raw / 127)` → `25 + (3679 / 127) ≈ 54°C`
+
+---
+
+### 🧪 Reserved Region (`0x0E–0x2D`)
+
+```hex
+23 28 7a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
