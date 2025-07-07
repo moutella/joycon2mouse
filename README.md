@@ -18,6 +18,10 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 1. Disconnecting and connecting in a short amount of time. Fix - Wait a little before reconnecting them
 2. Pairing through a button press - this never works, please use the Sync button as directed by the program
 
+---
+
+## Will there be GYRO support?
+
 Recently, GYROACCEL data has been found. The current code WILL enable IMU and also decode/parse the data, but it won't do anything with it. Why?  
 Simple answer: vgamepad doesn't support gyroaccel. Honestly, vgamepad seems very limiting. Having something else would be quite nice.. so if you have an idea, make sure to let me know.
 
