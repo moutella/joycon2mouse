@@ -75,7 +75,7 @@ Here’s an example notification received from a Joy-Con 2 via BLE, with the IMU
 08670000000000e0ff0ffff77f23287a0000000000000000000000000000005f0e007907000000000001ce7b52010500beffb501ee0ffeff04000200000000
 
 
-### 📦 Field Breakdown (based on known Joy-Con 2 layout)
+### Field Breakdown (based on known Joy-Con 2 layout)
 huge thanks to [@german77](https://github.com/german77) for providing me with the notification layout below!!
 
 | Offset | Size | Field              | Raw Value     | Parsed / Interpreted Value                    |
@@ -95,7 +95,7 @@ huge thanks to [@german77](https://github.com/german77) for providing me with th
 
 ---
 
-### 🧠 Technical Notes
+###  Technical Notes
 
 - **Left Joy-Con** does not have a right stick, so data at offset `0x0B–0x0D` is **not meaningful**. For completeness, it’s still included in the layout but should be ignored in parsing logic.
 - **Battery voltage** (`0x1F`) appears to be zero in this packet. Normally, this reports in millivolts (e.g., `3000 = 3.0V`), but `0x0000` likely means the value is not available at the time of sampling.
@@ -110,7 +110,7 @@ huge thanks to [@german77](https://github.com/german77) for providing me with th
 
 ---
 
-### 🧪 Reserved Region (`0x0E–0x2D`)
+###  Reserved Region (`0x0E–0x2D`)
 
 ```hex
 23 28 7a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
