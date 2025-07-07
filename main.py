@@ -20,12 +20,17 @@ SUBCOMMAND_PLAY_VIBRATION_PRESET = 0x02
 
 used_addresses = set()
 
+import gc
+
 class Player:
     def __init__(self, number, controller_type, side=None):
         self.number = number
         self.type = controller_type
         self.side = side
         self.clients = []
+
+        # Explicit garbage collection to prevent reuse issues
+        gc.collect()
         self.gamepad = vg.VX360Gamepad()
 
 def decode_joystick(data):
@@ -250,5 +255,13 @@ async def main():
                 if c.is_connected:
                     await c.disconnect()
 
+            # NEW: Explicitly remove virtual gamepad
+            if hasattr(p, "gamepad") and p.gamepad:
+                try:
+                    p.gamepad.reset()
+                    del p.gamepad
+                except Exception as e:
+                    print(f"Error removing gamepad for player {p.number}: {e}")
+                    
 if __name__ == "__main__":
     asyncio.run(main())
