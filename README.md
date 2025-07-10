@@ -20,10 +20,13 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 
 ---
 
-## Will there be GYRO support?
+## Will there be GYRO or MOUSE support?
 
 Recently, GYROACCEL data has been found. The current code WILL enable IMU and also decode/parse the data (solo_logic.py only for right now), but it won't do anything with it. Why?  
 Simple answer: vgamepad doesn't support gyroaccel. Honestly, vgamepad seems very limiting. Having something else would be quite nice.. so if you have an idea, make sure to let me know.
+
+Also, MOUSE data was found! Single Joy-Con will have a special feature where the mouse will use the right/left stick (depending on which joycon you're using) to get its inputs through.  
+Again, this is a vgamepad limitation, but its fun to atleast have something to use!
 
 (i feel like sending gyroaccel data through UDP/Dolphin's AIS/DSU would be kinda cool but idk how to set that up. if anyone else does, feel free to make a fork outta that)
 
