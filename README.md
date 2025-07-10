@@ -78,39 +78,65 @@ Here’s an example notification received from a Joy-Con 2 via BLE, with the IMU
 ### Field Breakdown (based on known Joy-Con 2 layout)
 huge thanks to [@german77](https://github.com/german77) for providing me with the notification layout below!!
 
-| Offset | Size | Field              | Raw Value     | Parsed / Interpreted Value                    |
-|--------|------|--------------------|----------------|-----------------------------------------------|
-| `0x00` | 4    | **Packet ID**      | `08 67 00 00`  | `0x00006708` → **26376**                      |
-| `0x04` | 4    | **Buttons**        | `00 00 00 00`  | No buttons pressed                            |
-| `0x08` | 3    | **Left Stick**     | `e0 ff 0f`     | X: `0x0FF0` = **4080**, Y: `0x0FE0` = **4064** |
-| `0x0B` | 3    | **Right Stick**    | `ff f7 7f`     | **Unused** on Left Joy-Con — ignore/garbage   |
-| `0x0E` | 17   | *(Reserved)*       | `23 28 7A ...` | Reserved or internal use                      |
-| `0x2E` | 2    | **Temperature**    | `5f 0e`        | `0x0E5F` = 3679 → **~54°C**                   |
-| `0x30` | 2    | **Accel X**        | `00 79`        | `0x7900` = **30976** → ~7.56G (likely unscaled) |
-| `0x32` | 2    | **Accel Y**        | `07 00`        | `0x0007` = **7** → ~0.0017G                    |
-| `0x34` | 2    | **Accel Z**        | `00 00`        | 0                                              |
-| `0x36` | 2    | **Gyro X**         | `01 ce`        | `0xCE01` = **52737** → ~395°/s                 |
-| `0x38` | 2    | **Gyro Y**         | `7b 52`        | `0x527B` = **21115** → ~158°/s                 |
-| `0x3A` | 2    | **Gyro Z**         | `01 05`        | `0x0501` = **1281** → ~9.6°/s                  |
+| Offset | Size | Value              | Comment                      |
+|--------|------|--------------------|------------------------------|
+| `0x00` | 0x4  | Packet ID          | Sequence or timestamp        |
+| `0x04` | 0x4  | Buttons            | Button state bitmap          |
+| `0x08` | 0x3  | Left Stick         | 12-bit X/Y packed             |
+| `0x0B` | 0x3  | Right Stick        | Likely garbage on Left Joy-Con |
+| `0x0E` | 0x2  | Mouse X            | Unknown meaning               |
+| `0x10` | 0x2  | Mouse Y            | Unknown meaning               |
+| `0x12` | 0x2  | Mouse Unk          | Possibly extra motion data    |
+| `0x14` | 0x2  | Mouse Distance     | Distance to IR/motion surface |
+| `0x16` | 0x2  | Magnetometer X     |                              |
+| `0x18` | 0x2  | Magnetometer Y     |                              |
+| `0x1A` | 0x2  | Magnetometer Z     |                              |
+| `0x1C` | 0x2  | Battery Voltage    | 1000 = 1V                     |
+| `0x1E` | 0x2  | Battery Current    | 100 = 1mA                     |
+| `0x20` | 0xE  | Reserved           | Undocumented region           |
+| `0x2E` | 0x2  | Temperature        | `25°C + raw / 127`           |
+| `0x30` | 0x2  | Accel X            | 4096 = 1G                     |
+| `0x32` | 0x2  | Accel Y            |                              |
+| `0x34` | 0x2  | Accel Z            |                              |
+| `0x36` | 0x2  | Gyro X             | 48000 = 360°/s                |
+| `0x38` | 0x2  | Gyro Y             |                              |
+| `0x3A` | 0x2  | Gyro Z             |                              |
+| `0x3C` | 0x2  | Analog Trigger L   |                              |
+| `0x3E` | 0x2  | Analog Trigger R   |                              |
 
 ---
 
-###  Technical Notes
+### 🧪 Field Example Breakdown
 
-- **Left Joy-Con** does not have a right stick, so data at offset `0x0B–0x0D` is **not meaningful**. For completeness, it’s still included in the layout but should be ignored in parsing logic.
-- **Battery voltage** (`0x1F`) appears to be zero in this packet. Normally, this reports in millivolts (e.g., `3000 = 3.0V`), but `0x0000` likely means the value is not available at the time of sampling.
-- **Stick values** are 12-bit X/Y pairs packed across 3 bytes:
-  - X: upper 12 bits of first 1.5 bytes
-  - Y: lower 12 bits of next 1.5 bytes
-- **IMU data** (Accel + Gyro) uses 16-bit signed integers:
+| Offset | Size | Field           | Raw Value     | Interpreted                  |
+|--------|------|------------------|----------------|------------------------------|
+| `0x00` | 4    | Packet ID        | `08 67 00 00`  | `0x00006708` → `26376`       |
+| `0x04` | 4    | Buttons          | `00 00 00 00`  | No buttons pressed           |
+| `0x08` | 3    | Left Stick       | `e0 ff 0f`     | X = `0x0FF0` = `4080`, Y = `0x0FE0` = `4064` |
+| `0x0B` | 3    | Right Stick      | `ff f7 7f`     | Garbage on Left Joy-Con      |
+| `0x2E` | 2    | Temperature      | `5f 0e`        | `0x0E5F` = `3679` → ~54°C     |
+| `0x30` | 2    | Accel X          | `00 79`        | `0x7900` = `30976`           |
+| `0x32` | 2    | Accel Y          | `07 00`        | `0x0007` = `7`               |
+| `0x34` | 2    | Accel Z          | `00 00`        | `0`                          |
+| `0x36` | 2    | Gyro X           | `01 ce`        | `0xCE01` = `52737`           |
+| `0x38` | 2    | Gyro Y           | `7b 52`        | `0x527B` = `21115`           |
+| `0x3A` | 2    | Gyro Z           | `01 05`        | `0x0501` = `1281`            |
+
+---
+
+### 📘 Notes
+
+- Left Joy-Con **does not use Right Stick**, so data at `0x0B–0x0D` is typically junk.
+- **Stick values** use 12-bit X/Y packed across 3 bytes:
+  - X = upper 12 bits of first 1.5 bytes
+  - Y = lower 12 bits of next 1.5 bytes
+- **Accel/Gyro** fields are signed 16-bit:
   - Accelerometer: `4096 = 1G`
   - Gyroscope: `48000 = 360°/s`
-- **Temperature** is calculated with:  
-  `25°C + (raw / 127)` → `25 + (3679 / 127) ≈ 54°C`
+- **Temperature**:  
+  `25°C + (raw / 127)`  
+  → `25 + (3679 / 127) ≈ 54°C`
+- **Battery voltage**:  
+  Reported as millivolts. `3000` = 3.0V. If `0x0000`, likely unavailable at that time.
 
 ---
-
-###  Reserved Region (`0x0E–0x2D`)
-
-```hex
-23 28 7a 00 00 00 00 00 00 00 00 00 00 00 00 00 00
