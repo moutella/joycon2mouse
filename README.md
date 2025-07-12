@@ -102,8 +102,8 @@ huge thanks to [@german77](https://github.com/german77) for providing me with th
 | `0x36` | 0x2  | Gyro X             | 48000 = 360°/s                |
 | `0x38` | 0x2  | Gyro Y             |                              |
 | `0x3A` | 0x2  | Gyro Z             |                              |
-| `0x3C` | 0x2  | Analog Trigger L   |                              |
-| `0x3E` | 0x2  | Analog Trigger R   |                              |
+| `0x3C` | 0x1  | Analog Trigger L   |                              |
+| `0x3D` | 0x1  | Analog Trigger R   |                              |
 
 ---
 
