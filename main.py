@@ -1,6 +1,7 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
-import vgamepad as vg
+# import vgamepad as vg
+import time
 
 # Constants
 JOYCON_MANUFACTURER_ID = 1363
@@ -31,7 +32,7 @@ class Player:
 
         # Explicit garbage collection to prevent reuse issues
         gc.collect()
-        self.gamepad = vg.VX360Gamepad()
+        self.gamepad = {}
 
 def decode_joystick(data):
     try:
@@ -98,8 +99,26 @@ async def enable_imu(client):
     ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
     ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
+
     await asyncio.sleep(0.5)
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
+
+async def enable_mouse(client):
+    # 0x0c = Comando de feature
+    # 0x91 = "Enviado do console"
+    # 0x01 = "BLE?" verificar.
+    # 0x02 = "Inicializar feature"
+    # 0x04 = "Habilitar feature."
+
+    # features:
+    # 0x04 = "Motion"
+    # 0x08 = mouse?
+    ENABLE_MOUSE_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_MOUSE_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    await asyncio.sleep(0.5)
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_1)
+    await asyncio.sleep(0.5)
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_2)
 
 async def set_leds(client, player_number):
     #Repoduce switch led patterns for up to 8 players https://en-americas-support.nintendo.com/app/answers/detail/a_id/22424
@@ -117,14 +136,29 @@ async def set_leds(client, player_number):
     if player_number > 8:
         player_number = 8
 
+    print(led_pattern_by_played_id[player_number])
+
     await write_command(client, COMMAND_LEDS, SUBCOMMAND_SET_PLAYER_LEDS, led_pattern_by_played_id[player_number])
 
 async def connect_and_setup(device, player, handler_func, *handler_args):
     client = BleakClient(device.address)
     await client.connect()
     client._device = device
+    # await asyncio.sleep(0.5)  # Allow connection to stabilize
     await set_leds(client, player.number)
+    await set_leds(client, player.number)
+    await set_leds(client, player.number)
+
     await enable_imu(client)
+    await enable_mouse(client)
+    await play_vibration_preset(client, 0x01)  # Play default vibration preset
+    await asyncio.sleep(0.5)  # Allow vibration to play
+    await play_vibration_preset(client, 0x02)  # Play default vibration preset
+    await asyncio.sleep(0.5)  # Allow vibration to play
+    await play_vibration_preset(client, 0x03)  # Play default vibration preset
+    await asyncio.sleep(0.5)  # Allow vibration to play
+    await play_vibration_preset(client, 0x04)  # Play default vibration preset
+    print("cheguei aqui")
     await handler_func(client, player, *handler_args)
     player.clients.append(client)
     print(f"✅ Connected to {device.address}")
@@ -171,12 +205,13 @@ async def handle_gc_controller(client, player: Player):
 async def setup_player(number):
     print(f"\n🎮 Setting up Player {number}")
     while True:
-        choice = input("Controller Type? (1=Single Joy-Con, 2=Dual Joy-Con, 3=Pro Controller, 4=NSO GameCube): ").strip()
+        choice = "1" #input("Controller Type? (1=Single Joy-Con, 2=Dual Joy-Con, 3=Pro Controller, 4=NSO GameCube): ").strip()
         if choice == "1":
-            side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
-            side = "LEFT" if side == "L" else "RIGHT"
-            orientation = input("Orientation? (U=Upright, S=Sideways): ").strip().upper()
-            upright = orientation == "U"
+            # side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
+            # side = "LEFT" if side == "L" else "RIGHT"
+            side = "RIGHT"
+            # orientation = input("Orientation? (U=Upright, S=Sideways): ").strip().upper()
+            upright = orientation = "U"
 
             device = await scan_device(f"Player {number} {side} Joy-Con")
             if not device:
@@ -234,7 +269,7 @@ async def setup_player(number):
 async def main():
     try:
         players = []
-        count = int(input("How many players? ").strip())
+        count = 1 #int(input("How many players? ").strip())
         for i in range(1, count + 1):
             player = await setup_player(i)
             if not player:
