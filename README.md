@@ -3,6 +3,10 @@
 A lightweight Python script that turns the Joy-Con 2's and the Pro Controller 2 into working PC Controllers.
 
 ---
+## LOOK! NEW STUFF!
+Theres a new version of the project, here!  
+https://github.com/TheFrano/joycon2py/tree/cpp  
+It's a C++ rewrite of the entire project, to implement Gyro/Mouse using a DS4 controller. Check it out!  
 
 ## DISCLAIMER
 
@@ -22,13 +26,7 @@ If the program crashes, it means it couldn't connect to your joycon, often cause
 
 ## Will there be GYRO or MOUSE support?
 
-Recently, GYROACCEL data has been found. The current code WILL enable IMU and also decode/parse the data (solo_logic.py only for right now), but it won't do anything with it. Why?  
-Simple answer: vgamepad doesn't support gyroaccel. Honestly, vgamepad seems very limiting. Having something else would be quite nice.. so if you have an idea, make sure to let me know.
-
-Also, MOUSE data was found! Single Joy-Con will have a special feature where the mouse will use the right/left stick (depending on which joycon you're using) to get its inputs through.  
-Again, this is a vgamepad limitation, but its fun to atleast have something to use!
-
-(i feel like sending gyroaccel data through UDP/Dolphin's AIS/DSU would be kinda cool but idk how to set that up. if anyone else does, feel free to make a fork outta that)
+Their data WAS found, however vgamepad can't use the data. If you want this, check out the C++ version at the top.
 
 ##
 ---
@@ -104,8 +102,8 @@ huge thanks to [@german77](https://github.com/german77) for providing me with th
 | `0x36` | 0x2  | Gyro X             | 48000 = 360°/s                |
 | `0x38` | 0x2  | Gyro Y             |                              |
 | `0x3A` | 0x2  | Gyro Z             |                              |
-| `0x3C` | 0x2  | Analog Trigger L   |                              |
-| `0x3E` | 0x2  | Analog Trigger R   |                              |
+| `0x3C` | 0x1  | Analog Trigger L   |                              |
+| `0x3D` | 0x1  | Analog Trigger R   |                              |
 
 ---
 
