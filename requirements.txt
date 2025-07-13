@@ -1,0 +1,4 @@
+uvicorn
+bleak
+fastapi
+pyautogui
