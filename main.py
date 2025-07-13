@@ -1,26 +1,13 @@
+from utils import *
 import uvicorn
 import asyncio
 from bleak import BleakScanner, BleakClient
+from joycon import JoyCon
 # import vgamepad as vg
 import time
 
 from fastapi import FastAPI
 
-# Constants
-JOYCON_MANUFACTURER_ID = 1363
-JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
-
-# BLE GATT Characteristics UUID
-INPUT_REPORT_UUID = "ab7de9be-89fe-49ad-828f-118f09df7fd2"
-WRITE_COMMAND_UUID = "649d4ac9-8eb7-4e6c-af44-1ea54fe5f005"
-
-# COMMANDS
-COMMAND_LEDS = 0x09
-COMMAND_VIBRATION = 0x0A
-
-# SUBCOMMANDS
-SUBCOMMAND_SET_PLAYER_LEDS = 0x07
-SUBCOMMAND_PLAY_VIBRATION_PRESET = 0x02
 
 used_addresses = set()
 
@@ -38,24 +25,8 @@ class Player:
 
         # Explicit garbage collection to prevent reuse issues
         gc.collect()
-        self.gamepad = {}
+        self.gamepad = JoyCon()  # Initialize JoyCon instance
 
-def decode_joystick(data):
-    try:
-        if len(data) != 3:
-            return 0, 0
-        x = ((data[1] & 0x0F) << 8) | data[0]
-        y = (data[2] << 4) | ((data[1] & 0xF0) >> 4)
-        x = (x - 2048) / 2048.0
-        y = (y - 2048) / 2048.0
-        deadzone = 0.08
-        if abs(x) < deadzone and abs(y) < deadzone:
-            return 0, 0
-        x = max(-1.0, min(1.0, x * 1.7))
-        y = max(-1.0, min(1.0, y * 1.7))
-        return int(x * 32767), int(y * 32767)
-    except:
-        return 0, 0
 
 async def scan_device(prompt="controller"):
     print(f"\n🔍 Searching for your {prompt} (press sync)...")
@@ -219,24 +190,6 @@ async def handle_single_joycon(client, player: Player, upright: bool):
         await handle_single_notification(sender, data, player.side == "LEFT", player.gamepad, upright)
     await client.start_notify(INPUT_REPORT_UUID, cb)
 
-async def handle_dual_joycon(client, player: Player, side: str):
-    from duo_logic import handle_duo_notification
-    async def cb(sender, data):
-        await handle_duo_notification(sender, data, side, player.gamepad)
-    await client.start_notify(INPUT_REPORT_UUID, cb)
-
-async def handle_pro_controller(client, player: Player):
-    from pro_logic import handle_pro_notification
-    async def cb(sender, data):
-        await handle_pro_notification(sender, data, player.gamepad)
-    await client.start_notify(INPUT_REPORT_UUID, cb)
-
-async def handle_gc_controller(client, player: Player):
-    from gc_logic import handle_gc_notification
-    async def cb(sender, data):
-        await handle_gc_notification(sender, data, player.gamepad)
-    await client.start_notify(INPUT_REPORT_UUID, cb)
-
 async def setup_player(number):
     print(f"\n🎮 Setting up Player {number}")
     while True:
@@ -256,46 +209,6 @@ async def setup_player(number):
             player = Player(number, "SINGLE_JOYCON", side)
             client = await connect_and_setup(device, player, handle_single_joycon, upright)
             asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
-            return player
-
-        elif choice == "2":
-            right = await scan_device(f"Player {number} RIGHT Joy-Con")
-            if not right:
-                return None
-            used_addresses.add(right.address)
-
-            left = await scan_device(f"Player {number} LEFT Joy-Con")
-            if not left:
-                return None
-            used_addresses.add(left.address)
-
-            player = Player(number, "DUAL_JOYCON")
-            right_client = await connect_and_setup(right, player, handle_dual_joycon, "RIGHT")
-            left_client = await connect_and_setup(left, player, handle_dual_joycon, "LEFT")
-            asyncio.create_task(maintain_connection_loop(right_client, right, player, handle_dual_joycon, "RIGHT"))
-            asyncio.create_task(maintain_connection_loop(left_client, left, player, handle_dual_joycon, "LEFT"))
-            return player
-
-        elif choice == "3":
-            device = await scan_device(f"Player {number} Pro Controller")
-            if not device:
-                return None
-            used_addresses.add(device.address)
-
-            player = Player(number, "PRO_CONTROLLER")
-            client = await connect_and_setup(device, player, handle_pro_controller)
-            asyncio.create_task(maintain_connection_loop(client, device, player, handle_pro_controller))
-            return player
-
-        elif choice == "4":
-            device = await scan_device(f"Player {number} GameCube Controller")
-            if not device:
-                return None
-            used_addresses.add(device.address)
-
-            player = Player(number, "GC_CONTROLLER")
-            client = await connect_and_setup(device, player, handle_gc_controller)
-            asyncio.create_task(maintain_connection_loop(client, device, player, handle_gc_controller))
             return player
 
         else:
@@ -401,7 +314,7 @@ async def run_fastapi():
 
 
 async def mainapi():
-    await asyncio.gather(main())
+    await asyncio.gather(main(), run_fastapi())  # Run both main and FastAPI concurrently
     #, run_fastapi()
 if __name__ == "__main__":
     asyncio.run(mainapi())
