@@ -1,4 +1,11 @@
-from mouse_simulator import *
+import asyncio
+import pyautogui
+
+pyautogui.FAILSAFE = True          # keep the corner-abort feature
+pyautogui.PAUSE   = 0              # disable the global 100 ms pause
+pyautogui.MINIMUM_DURATION = 0     # no forced smoothing
+
+# from mouse_simulator import *
 
 # Button masks
 SL_MASK = 0x002000
@@ -24,6 +31,42 @@ def decode_gyro(data: bytes):
     gyro_z = gyro_z_raw * scale
 
     return gyro_x, gyro_y, gyro_z
+
+
+last_mouse_pos = (None, None)
+def decode_mouse(data: bytes):
+    global last_mouse_pos
+    if len(data) < 0x3c:
+        return None
+    mouse_data = data[0x10:0x18]
+    mouse_hex_str = ' '.join(f'{b:02X}' for b in mouse_data)
+    # print(hex_str[48:75])
+    # print(mouse_hex_str)
+
+
+    def to_signed_16(b1, b2):
+        return int.from_bytes(bytes([b1, b2]), byteorder='little', signed=True)
+    
+
+    mouse_x_raw = to_signed_16(mouse_data[0x00], mouse_data[0x01]) 
+    mouse_y_raw = to_signed_16(mouse_data[0x02], mouse_data[0x03])
+    if last_mouse_pos[0] is not None:
+        mouse_x_delta = mouse_x_raw - last_mouse_pos[0]
+        mouse_y_delta = mouse_y_raw - last_mouse_pos[1]
+            # posicao_atual = pyautogui.position()
+            # posicao_futura = (posicao_atual[0] - mouse_x_delta, posicao_atual[1] - mouse_y_delta)
+            # pyautogui.moveTo(posicao_futura)
+        pyautogui.moveRel(mouse_x_delta, mouse_y_delta, duration=0)
+        last_mouse_pos = (mouse_x_raw, mouse_y_raw)
+    else:
+        last_mouse_pos = (mouse_x_raw, mouse_y_raw)
+    # print(mouse_x_raw, mouse_y_raw)
+    # if abs(mouse_x) < 5:
+    #     mouse_x = 0
+    # if abs(mouse_y) < 5:
+    #     mouse_y = 0
+
+    # return mouse_x, mouse_y
 
 def decode_accel(data: bytes):
     if len(data) < 0x36:  # accel bytes end at 0x35 (0x30..0x35)
@@ -90,8 +133,11 @@ def decode_joystick(data, is_left, upright):
 async def handle_single_notification(sender, data, is_left, gamepad, upright):
     # print(data)
     # Convert data to readable hex string, separated every 2 characters
-    hex_str = ' '.join(f'{b:02X}' for b in data)
-    print(f"{hex_str}")
+    # example 
+    # 57 26 00 00 00 00 00 E0 FF 0F FF F7 7F F6 C7 7D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 5C 0E 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    # hex_str = ' '.join(f'{b:02X}' for b in data)
+    # print(hex_str[48:75])
+    # print(hex_str)
     side = "LEFT" if is_left else "RIGHT"
     offset = 4 if is_left else 3
     state = int.from_bytes(data[offset:offset+3], 'big')
@@ -108,29 +154,31 @@ async def handle_single_notification(sender, data, is_left, gamepad, upright):
 
     changed = False
 
-
+    mouse = decode_mouse(data)
+    if mouse is not None:
+        pass
 
     # Decode and print gyro values
-    gyro = decode_gyro(data)
-    if gyro is not None:
-        gyro_x, gyro_y, gyro_z = gyro
+    # gyro = decode_gyro(data)
+    # if gyro is not None:
+    #     gyro_x, gyro_y, gyro_z = gyro
 
-    accel = decode_accel(data)
-    if accel is not None:
-        accel_x, accel_y, accel_z = accel
+    # accel = decode_accel(data)
+    # if accel is not None:
+    #     accel_x, accel_y, accel_z = accel
 
     # === TRIGGERS & SHOULDERS ===
     # Upright config triggers/shoulders
-    if upright:
-        new_left_trigger = 255 if state & 0x000080 else 0
-        new_right_trigger = 255 if state & 0x008000 else 0
-        new_left_shoulder = bool(state & 0x000040)
-        new_right_shoulder = bool(state & 0x004000)
-    else:
-        new_left_trigger = 255 if state & MASKS["LEFT"]["LT"] else 0
-        new_right_trigger = 255 if state & MASKS["RIGHT"]["RT"] else 0
-        new_left_shoulder = bool(state & (0x000020 if is_left else 0x002000))
-        new_right_shoulder = bool(state & (0x000010 if is_left else 0x001000))
+    # if upright:
+    #     new_left_trigger = 255 if state & 0x000080 else 0
+    #     new_right_trigger = 255 if state & 0x008000 else 0
+    #     new_left_shoulder = bool(state & 0x000040)
+    #     new_right_shoulder = bool(state & 0x004000)
+    # else:
+    #     new_left_trigger = 255 if state & MASKS["LEFT"]["LT"] else 0
+    #     new_right_trigger = 255 if state & MASKS["RIGHT"]["RT"] else 0
+    #     new_left_shoulder = bool(state & (0x000020 if is_left else 0x002000))
+    #     new_right_shoulder = bool(state & (0x000010 if is_left else 0x001000))
 
     # Update triggers
     # if new_left_trigger != gamepad._last_left_trigger:
@@ -157,8 +205,9 @@ async def handle_single_notification(sender, data, is_left, gamepad, upright):
             if pressed:
                 if name == "A":
                     print("clicou")
-                    click()
-                pass
+                    pyautogui.click()
+                if name == "B":
+                    pyautogui.click(button='right')
                 # print(f"pressed {name}")
             else:
                 pass

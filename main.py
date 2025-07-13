@@ -1,7 +1,10 @@
+import uvicorn
 import asyncio
 from bleak import BleakScanner, BleakClient
 # import vgamepad as vg
 import time
+
+from fastapi import FastAPI
 
 # Constants
 JOYCON_MANUFACTURER_ID = 1363
@@ -23,6 +26,9 @@ used_addresses = set()
 
 import gc
 
+global cliente
+cliente = None
+players = []
 class Player:
     def __init__(self, number, controller_type, side=None):
         self.number = number
@@ -95,9 +101,37 @@ async def write_command(client, command_id, subcommand_id, buffer):
 async def play_vibration_preset(client, preset_id):
     await write_command(client, COMMAND_VIBRATION, SUBCOMMAND_PLAY_VIBRATION_PRESET, preset_id.to_bytes())
 
+
+async def disable_imu(client):
+    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x03, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
+
+    await asyncio.sleep(0.5)
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
+
 async def enable_imu(client):
-    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00])
+    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00])
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
+
+    await asyncio.sleep(0.5)
+    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
+
+
+async def enable_feature(client, feature_id):
+    features = {
+        "Unknown01":    0x01,
+        "Unknown02":    0x02,
+        "Motion":       0x04,
+        "Unknown08":    0x08,
+        "Mouse":        0x10,
+        "Current":      0x20,
+        "Unknown40":    0x40,
+        "Magnetometer": 0x80,
+    }
+    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, features[feature_id], 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, features[feature_id], 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
 
     await asyncio.sleep(0.5)
@@ -113,9 +147,9 @@ async def enable_mouse(client):
     # features:
     # 0x04 = "Motion"
     # 0x08 = mouse?
-    ENABLE_MOUSE_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    ENABLE_MOUSE_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    await asyncio.sleep(0.5)
+    ENABLE_MOUSE_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x08, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+    ENABLE_MOUSE_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x08, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
+
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_1)
     await asyncio.sleep(0.5)
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_2)
@@ -144,20 +178,21 @@ async def connect_and_setup(device, player, handler_func, *handler_args):
     client = BleakClient(device.address)
     await client.connect()
     client._device = device
-    # await asyncio.sleep(0.5)  # Allow connection to stabilize
+    await asyncio.sleep(0.5)  # Allow connection to stabilize
     await set_leds(client, player.number)
-    await set_leds(client, player.number)
-    await set_leds(client, player.number)
-
-    await enable_imu(client)
-    await enable_mouse(client)
-    await play_vibration_preset(client, 0x01)  # Play default vibration preset
-    await asyncio.sleep(0.5)  # Allow vibration to play
-    await play_vibration_preset(client, 0x02)  # Play default vibration preset
-    await asyncio.sleep(0.5)  # Allow vibration to play
-    await play_vibration_preset(client, 0x03)  # Play default vibration preset
     await asyncio.sleep(0.5)  # Allow vibration to play
     await play_vibration_preset(client, 0x04)  # Play default vibration preset
+    await asyncio.sleep(0.5)  # Allow vib
+    await enable_imu(client)
+    # await enable_mouse(client)
+    # await play_vibration_preset(client, 0x01)  # Play default vibration preset
+    # await asyncio.sleep(0.5)  # Allow vibration to play
+    # await play_vibration_preset(client, 0x02)  # Play default vibration preset
+    # await asyncio.sleep(0.5)  # Allow vibration to play
+    # await play_vibration_preset(client, 0x03)  # Play default vibration preset
+    global cliente
+    cliente = client
+    print(cliente)
     print("cheguei aqui")
     await handler_func(client, player, *handler_args)
     player.clients.append(client)
@@ -266,9 +301,10 @@ async def setup_player(number):
         else:
             print("❌ Invalid choice.")
 
+
 async def main():
     try:
-        players = []
+        global players
         count = 1 #int(input("How many players? ").strip())
         for i in range(1, count + 1):
             player = await setup_player(i)
@@ -297,6 +333,75 @@ async def main():
                     del p.gamepad
                 except Exception as e:
                     print(f"Error removing gamepad for player {p.number}: {e}")
-                    
+
+
+
+app = FastAPI()
+@app.get("/sons")
+async def read_root(som_id: str = "1"):
+    global players
+    if cliente is None:
+        return {"players": players}  
+    # play_vibration_preset(cliente, 0x04)
+    # print()
+    sons = {
+        "1": 0x01,
+        "2": 0x02,
+        "3": 0x03,
+        "4": 0x04,
+        "5": 0x05,
+        "6": 0x06,
+        "7": 0x07,
+        "8": 0x08,
+    }
+    await play_vibration_preset(players[0].clients[0], sons[som_id])
+    return {"my_var": len(players)}
+
+
+@app.get("/imu")
+async def imu(som_id: str = "1"):
+    global players
+    if cliente is None:
+        return {"players": players}  
+    await enable_imu(players[0].clients[0])
+    return {"my_var": len(players)}
+
+
+@app.get("/imu_disable")
+async def desativar_imu(som_id: str = "1"):
+    global players
+    if cliente is None:
+        return {"players": players}  
+    await disable_imu(players[0].clients[0])
+    return {"my_var": len(players)}
+
+
+@app.get("/mouse")
+async def mouse(som_id: str = "1"):
+    global players
+    if cliente is None:
+        return {"players": players}  
+    await enable_mouse(players[0].clients[0])
+    return {"my_var": len(players)}
+
+
+
+@app.get("/feature")
+async def mouse(feature: str = "Motion"):
+    global players
+    if cliente is None:
+        return {"players": players}  
+    await enable_feature(players[0].clients[0], feature)
+    return {"my_var": len(players)}
+
+async def run_fastapi():
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
+async def mainapi():
+    await asyncio.gather(main())
+    #, run_fastapi()
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(mainapi())
