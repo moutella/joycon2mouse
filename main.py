@@ -246,6 +246,12 @@ async def remove_player(player):
     # del players[player]
     # print(f"❌ Player {player.number} removed.")
 
+async def emit_sound():
+    global players
+    for player in players:
+        for client in player.clients:
+            await play_vibration_preset(client, 0x04) 
+
 async def main():
     try:
         global players
@@ -327,7 +333,11 @@ async def pillow():
 
         @rumps.clicked("Say hi")
         def sayhi(self, _):
-            rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
+            loop = asyncio.new_event_loop()
+            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
+            t.start()
+            future = asyncio.run_coroutine_threadsafe(emit_sound(), loop)
+            # future.add_done_callback(lambda f: handle_pairing_result(self, f.result()))
 
     if __name__ == "__main__":
         MyApp().run()
