@@ -2,3 +2,6 @@ uvicorn
 bleak
 fastapi
 pyautogui
+setuptools
+py2app
+Pillow

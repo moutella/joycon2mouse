@@ -1,6 +1,9 @@
+from functools import partial
 from utils import *
 import uvicorn
 import asyncio
+
+import rumps
 from bleak import BleakScanner, BleakClient
 from joycon import JoyCon
 # import vgamepad as vg
@@ -15,17 +18,26 @@ import gc
 
 global cliente
 cliente = None
-players = []
 class Player:
-    def __init__(self, number, controller_type, side=None):
+    def __init__(self, number, controller_type, side=None, task=None):
         self.number = number
         self.type = controller_type
         self.side = side
         self.clients = []
-
         # Explicit garbage collection to prevent reuse issues
         gc.collect()
         self.gamepad = JoyCon()  # Initialize JoyCon instance
+    
+    async def disconnect(self):
+        for client in self.clients:
+            if client.is_connected:
+                await client.disconnect()
+        self.clients.clear()
+        # Explicit garbage collection to prevent reuse issues
+        await self.task.cancel()
+        gc.collect()
+
+players : list[Player] = []
 
 
 async def scan_device(prompt="controller"):
@@ -208,17 +220,36 @@ async def setup_player(number):
 
             player = Player(number, "SINGLE_JOYCON", side)
             client = await connect_and_setup(device, player, handle_single_joycon, upright)
-            asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
+            task = asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
+            player.task = task
             return player
 
         else:
             print("❌ Invalid choice.")
 
+async def add_player(number):
+    global players
+    player = await setup_player(number)
+    if not player:
+        print("❌ Setup failed. Exiting.")
+        return False
+    players.append(player)
+    return number
+
+async def remove_player(player):
+    print("hmmm")
+    player -= 1
+    global players
+    await players[player].disconnect()
+    print("testre")
+    # await players[player].clients[0].disconnect()
+    # del players[player]
+    # print(f"❌ Player {player.number} removed.")
 
 async def main():
     try:
         global players
-        count = 1 #int(input("How many players? ").strip())
+        count = 0 #int(input("How many players? ").strip())
         for i in range(1, count + 1):
             player = await setup_player(i)
             if not player:
@@ -246,6 +277,69 @@ async def main():
                     del p.gamepad
                 except Exception as e:
                     print(f"Error removing gamepad for player {p.number}: {e}")
+
+
+
+
+async def pillow():
+    import rumps
+
+    from threading import Thread
+
+    def start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
+        asyncio.set_event_loop(loop)
+        loop.run_forever()
+
+    class MyApp(rumps.App):
+        def __init__(self):
+            super().__init__("MyApp", icon="assets/joycon2mouse.png")  # icon must be PNG
+            self.menu = ["JoyCon2Mouse"]
+
+        def notification(self, title, subtitle, message):
+            rumps.notification(title, subtitle, message)
+        
+        @rumps.clicked("Sync controller")
+        def sync(self, _):
+            # rumps.alert("Hello from the menu bar!")
+            loop = asyncio.new_event_loop()
+            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
+            t.start()
+            future = asyncio.run_coroutine_threadsafe(add_player(1), loop)
+            future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
+            # resultado = resultado.result()  # Wait for the coroutine to finish
+            # if resultado:
+            #     rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
+            
+        def handle_pairing_result(self, pairing_result):
+            if pairing_result:
+                rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
+                #TODO: Add disconnect option
+                # self.menu.add(rumps.MenuItem(f"Disconnect controller {pairing_result}", callback=partial(self.disconnect_controller, pairing_result)))
+            else:
+                rumps.notification("JoyCon Connection Failed", "", "Please try again.")
+
+        def disconnect_controller(self, number, sender):
+            loop = asyncio.new_event_loop()
+            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
+            t.start()
+            future = asyncio.run_coroutine_threadsafe(remove_player(number), loop)
+            # future.add_done_callback(lambda f: handle_pairing_result(self, f.result()))
+
+        @rumps.clicked("Say hi")
+        def sayhi(self, _):
+            rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
+
+    if __name__ == "__main__":
+        MyApp().run()
+
+async def mainapi():
+    await asyncio.gather(pillow())  # Run both main and FastAPI concurrently
+    #, run_fastapi()
+
+if __name__ == "__main__":
+    asyncio.run(mainapi())
+    print("hmm")
+    
 
 
 
@@ -311,10 +405,3 @@ async def run_fastapi():
     config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()
-
-
-async def mainapi():
-    await asyncio.gather(main(), run_fastapi())  # Run both main and FastAPI concurrently
-    #, run_fastapi()
-if __name__ == "__main__":
-    asyncio.run(mainapi())
