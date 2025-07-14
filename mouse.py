@@ -1,6 +1,6 @@
 import pyautogui
 
-pyautogui.FAILSAFE = False          # keep the corner-abort feature
+pyautogui.FAILSAFE = True          # keep the corner-abort feature
 pyautogui.PAUSE   = 0              # disable the global 100 ms pause
 pyautogui.MINIMUM_DURATION = 0     # no forced smoothing
 
@@ -8,10 +8,10 @@ pyautogui.MINIMUM_DURATION = 0     # no forced smoothing
 class InputSimulator:
 
     def mouse_down(self):
-        pyautogui.mouseDown()
+        pyautogui.mouseDown(button="left")
 
     def mouse_up(self):
-        pyautogui.mouseUp()
+        pyautogui.mouseUp(button="left")
 
 
     def mouse_down_right(self):
