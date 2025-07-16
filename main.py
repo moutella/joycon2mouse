@@ -270,65 +270,6 @@ async def main():
 
 
 
-
-async def pillow():
-    import rumps
-
-    from threading import Thread
-
-    def start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
-        asyncio.set_event_loop(loop)
-        loop.run_forever()
-
-    class MyApp(rumps.App):
-        def __init__(self):
-            super().__init__("MyApp", icon="assets/joycon2mouse.png")  # icon must be PNG
-            self.menu = ["JoyCon2Mouse"]
-
-        def notification(self, title, subtitle, message):
-            rumps.notification(title, subtitle, message)
-        
-        @rumps.clicked("Sync controller")
-        def sync(self, _):
-            # rumps.alert("Hello from the menu bar!")
-            loop = asyncio.new_event_loop()
-            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
-            t.start()
-            future = asyncio.run_coroutine_threadsafe(add_player(1), loop)
-            future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
-            # resultado = resultado.result()  # Wait for the coroutine to finish
-            # if resultado:
-            #     rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
-            
-        def handle_pairing_result(self, pairing_result):
-            if pairing_result:
-                rumps.notification("JoyCon Connected", "", "You may use your mouse now.")
-                #TODO: Add disconnect option
-                # self.menu.add(rumps.MenuItem(f"Disconnect controller {pairing_result}", callback=partial(self.disconnect_controller, pairing_result)))
-            else:
-                rumps.notification("JoyCon Connection Failed", "", "Please try again.")
-
-        def disconnect_controller(self, number, sender):
-            loop = asyncio.new_event_loop()
-            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
-            t.start()
-            future = asyncio.run_coroutine_threadsafe(remove_player(number), loop)
-            # future.add_done_callback(lambda f: handle_pairing_result(self, f.result()))
-
-        @rumps.clicked("Say hi")
-        def sayhi(self, _):
-            loop = asyncio.new_event_loop()
-            t = Thread(target=start_background_loop, args=(loop,), daemon=True)
-            t.start()
-            future = asyncio.run_coroutine_threadsafe(emit_sound(), loop)
-            # future.add_done_callback(lambda f: handle_pairing_result(self, f.result()))
-
-    if __name__ == "__main__":
-        MyApp().run()
-
-async def mainapi():
-    await asyncio.gather(pillow())  # Run both main and FastAPI concurrently
-    #, run_fastapi()
 # Função chamada quando clicar em "Quit"
 def quit_action(icon, item):
     icon.stop()
@@ -398,8 +339,6 @@ def open_new_window():
 
 
 if __name__ == "__main__":
-    
     icon = create_icon()
-
     icon.run_detached()
     tk_main_process.mainloop()
