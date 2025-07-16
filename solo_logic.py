@@ -1,10 +1,5 @@
 import asyncio
-import pyautogui
 from joycon import JoyCon
-
-pyautogui.FAILSAFE = False          # keep the corner-abort feature
-pyautogui.PAUSE   = 0              # disable the global 100 ms pause
-pyautogui.MINIMUM_DURATION = 0     # no forced smoothing
 
 # from mouse_simulator import *
 

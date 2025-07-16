@@ -1,7 +1,7 @@
 uvicorn
 bleak
 fastapi
-pyautogui
+pynput
 setuptools
 py2app
 Pillow

@@ -1,15 +1,12 @@
-from functools import partial
-from utils import *
-import uvicorn
 import asyncio
+import threading
+from pystray import Icon, MenuItem, Menu
+from PIL import Image
+from player import Player
 
-import rumps
+from utils import *
+
 from bleak import BleakScanner, BleakClient
-from joycon import JoyCon
-# import vgamepad as vg
-import time
-
-from fastapi import FastAPI
 
 
 used_addresses = set()
@@ -18,24 +15,6 @@ import gc
 
 global cliente
 cliente = None
-class Player:
-    def __init__(self, number, controller_type, side=None, task=None):
-        self.number = number
-        self.type = controller_type
-        self.side = side
-        self.clients = []
-        # Explicit garbage collection to prevent reuse issues
-        gc.collect()
-        self.gamepad = JoyCon()  # Initialize JoyCon instance
-    
-    async def disconnect(self):
-        for client in self.clients:
-            if client.is_connected:
-                await client.disconnect()
-        self.clients.clear()
-        # Explicit garbage collection to prevent reuse issues
-        await self.task.cancel()
-        gc.collect()
 
 players : list[Player] = []
 
@@ -75,6 +54,8 @@ async def scan_device(prompt="controller"):
         print("❌ No device found.")
 
     return selected_device
+
+
 
 async def write_command(client, command_id, subcommand_id, buffer):
     # Pad buffer to 8 bytes minimum because some buffer lengths seems to crash
@@ -345,73 +326,51 @@ async def pillow():
 async def mainapi():
     await asyncio.gather(pillow())  # Run both main and FastAPI concurrently
     #, run_fastapi()
+# Função chamada quando clicar em "Quit"
+def quit_action(icon, item):
+    icon.stop()
 
+def start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+from threading import Thread
+def create_sync():
+    loop = asyncio.new_event_loop()
+    t = Thread(target=start_background_loop, args=(loop,), daemon=True)
+    t.start()
+    future = asyncio.run_coroutine_threadsafe(add_player(1), loop)
+    # future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
+def emit_sound_button():
+    loop = asyncio.new_event_loop()
+    t = Thread(target=start_background_loop, args=(loop,), daemon=True)
+    t.start()
+    future = asyncio.run_coroutine_threadsafe(emit_sound(), loop)
+    # future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
+# Cria o ícone
+def create_icon():
+    image = Image.open("assets/joycon2mouse.png")
+    menu = Menu(MenuItem('Sync new Controller', create_sync), 
+                MenuItem('Sync new Controller', emit_sound_button), 
+                MenuItem('Test', lambda f: print("teste")))
+    # menu = Menu())
+    return Icon("MyTrayApp", image, menu=menu)
+
+# Roda o asyncio em background
+def run_async_tasks():
+    async def background_loop():
+        while True:
+            # print("Asyncio rodando...")
+            await asyncio.sleep(1)
+
+    asyncio.run(background_loop())
+
+# Inicia tudo
 if __name__ == "__main__":
-    asyncio.run(mainapi())
-    print("hmm")
-    
+    # Começa asyncio em thread separada
+    threading.Thread(target=run_async_tasks, daemon=True).start()
 
+    # Agora roda o ícone na thread principal
+    icon = create_icon()
 
-
-app = FastAPI()
-@app.get("/sons")
-async def read_root(som_id: str = "1"):
-    global players
-    if cliente is None:
-        return {"players": players}  
-    # play_vibration_preset(cliente, 0x04)
-    # print()
-    sons = {
-        "1": 0x01,
-        "2": 0x02,
-        "3": 0x03,
-        "4": 0x04,
-        "5": 0x05,
-        "6": 0x06,
-        "7": 0x07,
-        "8": 0x08,
-    }
-    await play_vibration_preset(players[0].clients[0], sons[som_id])
-    return {"my_var": len(players)}
-
-
-@app.get("/imu")
-async def imu(som_id: str = "1"):
-    global players
-    if cliente is None:
-        return {"players": players}  
-    await enable_imu(players[0].clients[0])
-    return {"my_var": len(players)}
-
-
-@app.get("/imu_disable")
-async def desativar_imu(som_id: str = "1"):
-    global players
-    if cliente is None:
-        return {"players": players}  
-    await disable_imu(players[0].clients[0])
-    return {"my_var": len(players)}
-
-
-@app.get("/mouse")
-async def mouse(som_id: str = "1"):
-    global players
-    if cliente is None:
-        return {"players": players}  
-    await enable_mouse(players[0].clients[0])
-    return {"my_var": len(players)}
-
-
-
-@app.get("/feature")
-async def mouse(feature: str = "Motion"):
-    global players
-    if cliente is None:
-        return {"players": players}  
-    await enable_feature(players[0].clients[0], feature)
-    return {"my_var": len(players)}
-
-async def run_fastapi():
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+    icon.run()

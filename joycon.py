@@ -70,6 +70,12 @@ class JoyCon:
                     self.input_simulator.mouse_down_right()
                 elif not pressed and last_pressed:
                     self.input_simulator.mouse_up_right()
+            
+
+            if name == "A":
+                if not pressed and last_pressed:
+                    print("click")
+                    self.input_simulator.mouse_double_click()
                     
             self.last_data = data
         
@@ -94,9 +100,6 @@ class JoyCon:
         if self.last_mouse_pos[0] is not None:
             mouse_x_delta = mouse_x_raw - self.last_mouse_pos[0]
             mouse_y_delta = mouse_y_raw - self.last_mouse_pos[1]
-                # posicao_atual = pyautogui.position()
-                # posicao_futura = (posicao_atual[0] - mouse_x_delta, posicao_atual[1] - mouse_y_delta)
-                # pyautogui.moveTo(posicao_futura)
             self.input_simulator.mouse_move(mouse_x_delta, mouse_y_delta)
 
             self.last_mouse_pos = (mouse_x_raw, mouse_y_raw)
@@ -120,8 +123,8 @@ class JoyCon:
         y = max(-1.0, min(1.0, y * 1.7))
         sensitivity = 4
         move_x = -int(x * sensitivity)
-        if move_x < 0 and move_x > -10:
-            move_x = -10
+        # if move_x < 0 and move_x > -10:
+        #     move_x = -10
         self.input_simulator.mouse_scroll(int(y * sensitivity), "vertical")
         self.input_simulator.mouse_scroll(move_x, "horizontal")
         # print(int(x * sensitivity))
