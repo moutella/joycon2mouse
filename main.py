@@ -356,21 +356,16 @@ def create_icon():
     # menu = Menu())
     return Icon("MyTrayApp", image, menu=menu)
 
-# Roda o asyncio em background
-def run_async_tasks():
-    async def background_loop():
-        while True:
-            # print("Asyncio rodando...")
-            await asyncio.sleep(1)
+# def run_async_tasks():
+#     async def background_loop():
+#         while True:
+#             await asyncio.sleep(1)
 
-    asyncio.run(background_loop())
+#     asyncio.run(background_loop())
 
-# Inicia tudo
 if __name__ == "__main__":
-    # Começa asyncio em thread separada
-    threading.Thread(target=run_async_tasks, daemon=True).start()
+    # threading.Thread(target=run_async_tasks, daemon=True).start()
 
-    # Agora roda o ícone na thread principal
     icon = create_icon()
 
     icon.run()
