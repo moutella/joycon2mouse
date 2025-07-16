@@ -1,9 +1,12 @@
+
+import tkinter as tk
+import sys
 import asyncio
 import threading
 from pystray import Icon, MenuItem, Menu
 from PIL import Image
 from player import Player
-
+from user_preferences import load_settings, save_settings
 from utils import *
 
 from bleak import BleakScanner, BleakClient
@@ -345,27 +348,58 @@ def emit_sound_button():
     loop = asyncio.new_event_loop()
     t = Thread(target=start_background_loop, args=(loop,), daemon=True)
     t.start()
-    future = asyncio.run_coroutine_threadsafe(emit_sound(), loop)
-    # future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
+    asyncio.run_coroutine_threadsafe(emit_sound(), loop)
+
+def on_quit(icon, item):
+    icon.stop()
+    sys.exit()
+
 # Cria o ícone
 def create_icon():
+    # Icon
+    settings = load_settings()
     image = Image.open("assets/joycon2mouse.png")
-    menu = Menu(MenuItem('Sync new Controller', create_sync), 
-                MenuItem('Sync new Controller', emit_sound_button), 
-                MenuItem('Test', lambda f: print("teste")))
-    # menu = Menu())
-    return Icon("MyTrayApp", image, menu=menu)
 
-# def run_async_tasks():
-#     async def background_loop():
-#         while True:
-#             await asyncio.sleep(1)
+    # Main features
+    sync_new_controller = MenuItem('Sync new Controller', create_sync)
 
-#     asyncio.run(background_loop())
+    # Debug Menu
+    debug_emit_sound = MenuItem('Say hi', emit_sound_button)
+    debug_tkinter = MenuItem("Joy Con View", open_new_window)
+    debug_menu = MenuItem('DEBUG', (Menu(
+                    debug_emit_sound, debug_emit_sound, debug_tkinter))) 
+
+
+    # Final Menu
+    menu = Menu(sync_new_controller, 
+                debug_menu, 
+                MenuItem('Exit', on_quit))
+    if settings["start_with_sync"]:
+        create_sync()
+    return Icon("joycon2mouse", image, menu=menu)
+
+settings = load_settings()
+
+tk_main_process = tk.Tk()
+tk_main_process.title("Welcome to JoyCon2Mouse")
+if settings["ignore_opening_window"]:
+    tk_main_process.withdraw()
+
+def quit_window(icon, item):
+    tk_main_process.destroy()
+
+def open_new_window():
+    new_window = tk.Tk()
+    new_window.title("New Window")
+    new_window.geometry("250x150")  
+
+    tk.Label(new_window, text="This is a new window").pack(pady=20)
+
+
 
 if __name__ == "__main__":
-    # threading.Thread(target=run_async_tasks, daemon=True).start()
-
+    
     icon = create_icon()
 
-    icon.run()
+    icon.run_detached()
+    tk_main_process.mainloop()
