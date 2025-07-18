@@ -19,3 +19,8 @@ It's not the best mouse ever, but it's still fun to be able to use it like that
 I was only able to do this because of [the original joycon2py by  TheFrano](https://github.com/TheFrano/joycon2py/)
 
 Some more info I used was provided in [german77's joycon driver](https://github.com/german77/JoyconDriver)
+
+
+# Building
+macOS: setup.py py2app     
+Windows: pyinstaller --add-data "./assets/*.png:assets/." .\main.py 
