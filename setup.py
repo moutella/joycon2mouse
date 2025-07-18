@@ -4,7 +4,7 @@ APP = ['main.py']
 DATA_FILES = []
 OPTIONS = {
     'argv_emulation': False,
-    'packages': ["PIL", "uvicorn", "rumps"],
+    'packages': ["PIL", "uvicorn", "pystray", "tkinter", "pynput"],
     'iconfile': 'JoyCon2Mouse.icns',  # Optional
     'plist': 'Info.plist',
     'excludes': ['rubicon'],

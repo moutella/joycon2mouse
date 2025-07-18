@@ -29,17 +29,16 @@ def save_settings(settings):
 
 def create_default_settings():
     settings_file = get_settings_path()
+    print(get_settings_path())
     with open(settings_file, "w") as f:
         settings = {
             "ignore_opening_window": False,
             "start_with_sync": False,
+            "devices": {}
         }
         json.dump(settings, f, indent=2)
 
-
-# ✅ Example usage
 if __name__ == "__main__":
+    print(load_settings())
+else:
     settings = load_settings()
-    # settings["volume"] += 5
-    save_settings(settings)
-    print("Settings saved:", settings)

@@ -47,26 +47,7 @@ def decode_accel(data: bytes):
 
 
 async def handle_single_notification(sender, data, is_left, gamepad: JoyCon, upright):
-    # 57 26 00 00 00 00 00 E0 FF 0F FF F7 7F F6 C7 7D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 5C 0E 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-    hex_str = ' '.join(f'{b:02X}' for b in data)
-    # print(hex_str[48:75])
-    # print(hex_str)
-    side = "LEFT" if is_left else "RIGHT"
-    offset = 4 if is_left else 3
-    
-    gamepad.process_mouse(data)
-    gamepad.process_buttons(data)
-    gamepad.process_sticks(data)
-    # === BUTTONS ===
-   
-
-    # === STICK ===
-
-    # if (x, y) != gamepad._last_joystick:
-    #     gamepad.left_joystick(x_value=x, y_value=y)
-    #     gamepad._last_joystick = (x, y)
-    #     changed = True
-
-    # # Only update if something changed
-    # if changed:
-    #     gamepad.update()
+    if gamepad:
+        gamepad.process_mouse(data)
+        gamepad.process_buttons(data)
+        gamepad.process_sticks(data)

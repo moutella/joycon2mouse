@@ -2,7 +2,7 @@ import logging
 from mouse import InputSimulator
 
 MASKS = {
-    "RIGHT": {
+    "right": {
         "A":    0x000800,
         "B":    0x000400,
         "X":    0x000200,
@@ -16,21 +16,22 @@ MASKS = {
         "HOME": 0x000010,
         "CHAT": 0x000040,
     },
-    "LEFT": {
+    "left": {
         "UP":     0x000002,
         "DOWN":   0x000001,
         "LEFT":   0x000008,
         "RIGHT":  0x000004,
         "MINUS":  0x000100,
         "STICK":  0x000800,
-        "SL_MASK":  0x002000,
-        "SR_MASK":  0x001000,
-        "LEFT_SL_MASK":  0x000020,
-        "LEFT_SR_MASK":  0x000010,
+        "SHARE":  0x002000,
+        "SL":  0x000020,
+        "SR":  0x000010,
+        "L": 0x000040,
+        "ZL": 0x000080
     }
 }
 class JoyCon:
-    def __init__(self, side="RIGHT"):
+    def __init__(self, side="right"):
         pass
         self.settings = None
         self.buttons = {
@@ -41,7 +42,7 @@ class JoyCon:
         self.input_simulator = InputSimulator()
         self.last_pressed = None
         self.side = side
-        self.is_left = True if side == "LEFT" else False
+        self.is_left = False if side == "right" else True
         self.last_mouse_pos = (None, None)
         self.last_data = None
 
@@ -49,7 +50,9 @@ class JoyCon:
         button_map = MASKS[self.side]
 
         offset = 4 if self.is_left else 3
-        state = int.from_bytes(data[offset:offset+3], 'big')
+        mouse_data = data[offset:offset+3]
+        # print(' '.join(f'{b:02X}' for b in mouse_data))
+        state = int.from_bytes(mouse_data, 'big')
         if self.last_data is not None:
             last_state = int.from_bytes(self.last_data[offset:offset+3], 'big') 
         else:
@@ -59,23 +62,27 @@ class JoyCon:
             pressed = bool(state & mask)
             # last_pressed = getattr(gamepad, f"_last_btn_{vg_btn}", None)
             last_pressed = bool(last_state & mask)
-            if name == "R":
+            if name == "R" or name == "L":
                 if pressed and not last_pressed:
                     self.input_simulator.mouse_down()
                 elif not pressed and last_pressed:
                     self.input_simulator.mouse_up()
 
-            if name == "ZR":
+            if name == "ZR" or name == "ZR":
                 if pressed and not last_pressed:
                     self.input_simulator.mouse_down_right()
                 elif not pressed and last_pressed:
                     self.input_simulator.mouse_up_right()
             
 
-            if name == "A":
+            if name == "A" or name == "LEFT":
                 if not pressed and last_pressed:
                     print("click")
                     self.input_simulator.mouse_double_click()
+                    
+            
+            if not pressed and last_pressed:
+                print(name)
                     
             self.last_data = data
         
@@ -123,9 +130,5 @@ class JoyCon:
         y = max(-1.0, min(1.0, y * 1.7))
         sensitivity = 4
         move_x = -int(x * sensitivity)
-        # if move_x < 0 and move_x > -10:
-        #     move_x = -10
         self.input_simulator.mouse_scroll(int(y * sensitivity), "vertical")
         self.input_simulator.mouse_scroll(move_x, "horizontal")
-        # print(int(x * sensitivity))
-        # print(x,y)

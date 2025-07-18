@@ -1,23 +1,18 @@
-
+import asyncio
+import queue
+from threading import Thread
 import tkinter as tk
 import sys
-import asyncio
-import threading
 from pystray import Icon, MenuItem, Menu
-from PIL import Image
+from PIL import Image, ImageTk
 from player import Player
-from user_preferences import load_settings, save_settings
+from user_preferences import settings, save_settings, load_settings
 from utils import *
-
 from bleak import BleakScanner, BleakClient
 
 
 used_addresses = set()
-
-import gc
-
-global cliente
-cliente = None
+command_queue = queue.Queue()
 
 players : list[Player] = []
 
@@ -69,15 +64,7 @@ async def play_vibration_preset(client, preset_id):
     await write_command(client, COMMAND_VIBRATION, SUBCOMMAND_PLAY_VIBRATION_PRESET, preset_id.to_bytes())
 
 
-async def disable_imu(client):
-    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x03, 0x00, 0x04, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
-
-    await asyncio.sleep(0.5)
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
-
-async def enable_imu(client):
+async def enable_mouse(client):
     ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00])
     ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00])
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
@@ -85,41 +72,6 @@ async def enable_imu(client):
     await asyncio.sleep(0.5)
     await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
 
-
-async def enable_feature(client, feature_id):
-    features = {
-        "Unknown01":    0x01,
-        "Unknown02":    0x02,
-        "Motion":       0x04,
-        "Unknown08":    0x08,
-        "Mouse":        0x10,
-        "Current":      0x20,
-        "Unknown40":    0x40,
-        "Magnetometer": 0x80,
-    }
-    ENABLE_IMU_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, features[feature_id], 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    ENABLE_IMU_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, features[feature_id], 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_1)
-
-    await asyncio.sleep(0.5)
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_IMU_2)
-
-async def enable_mouse(client):
-    # 0x0c = Comando de feature
-    # 0x91 = "Enviado do console"
-    # 0x01 = "BLE?" verificar.
-    # 0x02 = "Inicializar feature"
-    # 0x04 = "Habilitar feature."
-
-    # features:
-    # 0x04 = "Motion"
-    # 0x08 = mouse?
-    ENABLE_MOUSE_1 = bytes([0x0c, 0x91, 0x01, 0x02, 0x00, 0x08, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-    ENABLE_MOUSE_2 = bytes([0x0c, 0x91, 0x01, 0x04, 0x00, 0x08, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00])
-
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_1)
-    await asyncio.sleep(0.5)
-    await client.write_gatt_char(WRITE_COMMAND_UUID, ENABLE_MOUSE_2)
 
 async def set_leds(client, player_number):
     #Repoduce switch led patterns for up to 8 players https://en-americas-support.nintendo.com/app/answers/detail/a_id/22424
@@ -141,7 +93,7 @@ async def set_leds(client, player_number):
 
     await write_command(client, COMMAND_LEDS, SUBCOMMAND_SET_PLAYER_LEDS, led_pattern_by_played_id[player_number])
 
-async def connect_and_setup(device, player, handler_func, *handler_args):
+async def connect_and_setup(device, player: Player, handler_func, *handler_args):
     client = BleakClient(device.address)
     await client.connect()
     client._device = device
@@ -150,13 +102,14 @@ async def connect_and_setup(device, player, handler_func, *handler_args):
     await asyncio.sleep(0.5)  # Allow vibration to play
     await play_vibration_preset(client, 0x04)  # Play default vibration preset
     await asyncio.sleep(0.5)  # Allow vib
-    await enable_imu(client)
-    # await enable_mouse(client)
-    # await play_vibration_preset(client, 0x01)  # Play default vibration preset
-    # await asyncio.sleep(0.5)  # Allow vibration to play
-    # await play_vibration_preset(client, 0x02)  # Play default vibration preset
-    # await asyncio.sleep(0.5)  # Allow vibration to play
-    # await play_vibration_preset(client, 0x03)  # Play default vibration preset
+    await enable_mouse(client)
+    if device.address not in settings["devices"]:
+        command_queue.put({"command": "new_joy_window", "data": device.address, "player": player})
+    else:
+        print("hmmmmm???")
+        print(device.address)
+        print(settings["devices"][device.address]["type"])
+        player.attach_joycon(settings["devices"][device.address]["type"])
     global cliente
     cliente = client
     print(cliente)
@@ -189,27 +142,23 @@ async def handle_single_joycon(client, player: Player, upright: bool):
 async def setup_player(number):
     print(f"\n🎮 Setting up Player {number}")
     while True:
-        choice = "1" #input("Controller Type? (1=Single Joy-Con, 2=Dual Joy-Con, 3=Pro Controller, 4=NSO GameCube): ").strip()
-        if choice == "1":
-            # side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
-            # side = "LEFT" if side == "L" else "RIGHT"
-            side = "RIGHT"
-            # orientation = input("Orientation? (U=Upright, S=Sideways): ").strip().upper()
-            upright = orientation = "U"
+        # side = input("Left or Right Joy-Con? (L/R): ").strip().upper()
+        # side = "LEFT" if side == "L" else "RIGHT"
+        # side = "RIGHT"
+        # orientation = input("Orientation? (U=Upright, S=Sideways): ").strip().upper()
+        upright = orientation = "U"
 
-            device = await scan_device(f"Player {number} {side} Joy-Con")
-            if not device:
-                return None
-            used_addresses.add(device.address)
+        device = await scan_device(f"Player {number} Joy-Con")
+        if not device:
+            return None
+        used_addresses.add(device.address)
 
-            player = Player(number, "SINGLE_JOYCON", side)
-            client = await connect_and_setup(device, player, handle_single_joycon, upright)
-            task = asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
-            player.task = task
-            return player
+        player = Player(number, "SINGLE_JOYCON")
+        client = await connect_and_setup(device, player, handle_single_joycon, upright)
+        task = asyncio.create_task(maintain_connection_loop(client, device, player, handle_single_joycon, upright))
+        player.task = task
+        return player
 
-        else:
-            print("❌ Invalid choice.")
 
 async def add_player(number):
     global players
@@ -236,37 +185,6 @@ async def emit_sound():
         for client in player.clients:
             await play_vibration_preset(client, 0x04) 
 
-async def main():
-    try:
-        global players
-        count = 0 #int(input("How many players? ").strip())
-        for i in range(1, count + 1):
-            player = await setup_player(i)
-            if not player:
-                print("❌ Setup failed. Exiting.")
-                return
-            players.append(player)
-
-        print("🎮 All players connected. Press Ctrl+C to stop.")
-        while True:
-            await asyncio.sleep(1)
-
-    except KeyboardInterrupt:
-        print("\nExiting...")
-
-    finally:
-        for p in players:
-            for c in p.clients:
-                if c.is_connected:
-                    await c.disconnect()
-
-            # NEW: Explicitly remove virtual gamepad
-            if hasattr(p, "gamepad") and p.gamepad:
-                try:
-                    p.gamepad.reset()
-                    del p.gamepad
-                except Exception as e:
-                    print(f"Error removing gamepad for player {p.number}: {e}")
 
 
 
@@ -278,14 +196,14 @@ def start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
-from threading import Thread
-def create_sync():
+def tray_connect_new_controller():
     loop = asyncio.new_event_loop()
     t = Thread(target=start_background_loop, args=(loop,), daemon=True)
     t.start()
     future = asyncio.run_coroutine_threadsafe(add_player(1), loop)
     # future.add_done_callback(lambda f: self.handle_pairing_result(f.result()))
-def emit_sound_button():
+
+def tray_emit_sound():
     loop = asyncio.new_event_loop()
     t = Thread(target=start_background_loop, args=(loop,), daemon=True)
     t.start()
@@ -293,20 +211,22 @@ def emit_sound_button():
 
 def on_quit(icon, item):
     icon.stop()
+    for process in tk_processes:
+        process.destroy()
     sys.exit()
 
 # Cria o ícone
-def create_icon():
+def create_icon(tk_main_process):
     # Icon
     settings = load_settings()
     image = Image.open("assets/joycon2mouse.png")
 
     # Main features
-    sync_new_controller = MenuItem('Sync new Controller', create_sync)
+    sync_new_controller = MenuItem('Sync new Controller', tray_connect_new_controller)
 
     # Debug Menu
-    debug_emit_sound = MenuItem('Say hi', emit_sound_button)
-    debug_tkinter = MenuItem("Joy Con View", open_new_window)
+    debug_emit_sound = MenuItem('Say hi', tray_emit_sound)
+    debug_tkinter = MenuItem("Joy Con View", set_joycon_type_interface)
     debug_menu = MenuItem('DEBUG', (Menu(
                     debug_emit_sound, debug_emit_sound, debug_tkinter))) 
 
@@ -316,29 +236,85 @@ def create_icon():
                 debug_menu, 
                 MenuItem('Exit', on_quit))
     if settings["start_with_sync"]:
-        create_sync()
+        tray_connect_new_controller()
+    # set_joycon_type_interface("lala")
     return Icon("joycon2mouse", image, menu=menu)
 
-settings = load_settings()
 
 tk_main_process = tk.Tk()
+# tk_main_process.wm_attributes("-toolwindow", True)
 tk_main_process.title("Welcome to JoyCon2Mouse")
+tk_main_process.protocol("WM_DELETE_WINDOW", tk_main_process.withdraw)
+tk_processes = [tk_main_process]
+# tk_main_process.deiconify()
 if settings["ignore_opening_window"]:
     tk_main_process.withdraw()
 
-def quit_window(icon, item):
-    tk_main_process.destroy()
 
-def open_new_window():
+def set_joycon_type_interface(controller_id, player: Player):
+    def on_select(option):
+        if controller_id not in settings:
+            settings["devices"][controller_id] = {
+                "type": option
+            }
+            player.attach_joycon(option)
+        else:
+            settings["devices"][controller_id]["type"] = option
+
+        save_settings(settings)
+        tk_processes.remove(new_window)
+        new_window.destroy()
+
     new_window = tk.Tk()
-    new_window.title("New Window")
-    new_window.geometry("250x150")  
+    tk_processes.append(new_window)
+    new_window.title("New Joy-Con")
+    screen_width = new_window.winfo_screenwidth()
+    screen_height = new_window.winfo_screenheight()
+    width = 640
+    height = 300
+    x = (screen_width // 2) - (width // 2)
+    y = (screen_height // 2) - (height // 2) # width x height
+    new_window.geometry(f'{width}x{height}+{x}+{y}')
+    
+    # Create images AFTER creating the window
+    photo1 = tk.PhotoImage(master=new_window, file="assets/left.png")
+    photo2 = tk.PhotoImage(master=new_window, file="assets/right.png")
+    photo1 = photo1.subsample(4)
+    photo2 = photo2.subsample(4)
 
-    tk.Label(new_window, text="This is a new window").pack(pady=20)
+    # Keep references
+    new_window.photo1 = photo1
+    # new_window.photo2 = photo2
 
+    frame = tk.Frame(new_window)
+
+    frame.pack(expand=True)
+    # Create buttons
+    btn1 = tk.Button(frame, image=photo1, command=lambda: on_select("left"))
+    btn1.image = photo1
+    btn2 = tk.Button(frame, image=photo2, command=lambda: on_select("right"))
+    btn2.image = photo2
+    
+    tk.Label(new_window, text="Choose JoyCon type").pack(pady=20)
+    
+    btn1.pack(side="left", padx=(0, 5))  # Padding to the right
+    btn2.pack(side="left", padx=(5, 0))  # Padding to the left
+
+
+
+def process_queue(root):
+    try:
+        while True:
+            command = command_queue.get_nowait()
+            if command["command"] == "new_joy_window":
+                set_joycon_type_interface(command["data"], command["player"])
+    except queue.Empty:
+        pass
+    root.after(100, process_queue, root)
 
 
 if __name__ == "__main__":
-    icon = create_icon()
+    icon = create_icon(tk_main_process)
     icon.run_detached()
+    process_queue(tk_main_process)
     tk_main_process.mainloop()
