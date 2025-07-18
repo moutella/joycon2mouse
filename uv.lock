@@ -159,7 +159,6 @@ dependencies = [
     { name = "pyinstaller" },
     { name = "pynput" },
     { name = "pystray" },
-    { name = "rumps" },
     { name = "setuptools" },
     { name = "uvicorn" },
 ]
@@ -174,7 +173,6 @@ requires-dist = [
     { name = "pyinstaller", specifier = ">=6.14.2" },
     { name = "pynput", specifier = ">=1.8.1" },
     { name = "pystray", specifier = ">=0.19.5" },
-    { name = "rumps", specifier = ">=0.4.0" },
     { name = "setuptools", specifier = "==70.3.0" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
@@ -568,15 +566,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/85/9f/01a1a99704853cb63
 wheels = [
     { url = "https://files.pythonhosted.org/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl", hash = "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8", size = 30756, upload-time = "2024-08-14T10:15:33.187Z" },
 ]
-
-[[package]]
-name = "rumps"
-version = "0.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyobjc-framework-cocoa" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/e2/2e6a47951290bd1a2831dcc50aec4b25d104c0cf00e8b7868cbd29cf3bfe/rumps-0.4.0.tar.gz", hash = "sha256:17fb33c21b54b1e25db0d71d1d793dc19dc3c0b7d8c79dc6d833d0cffc8b1596", size = 39257, upload-time = "2022-10-15T05:15:10.386Z" }
 
 [[package]]
 name = "setuptools"
