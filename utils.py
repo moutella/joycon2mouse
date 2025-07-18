@@ -1,4 +1,7 @@
 
+import sys
+from os import path
+
 # Constants
 JOYCON_MANUFACTURER_ID = 1363
 JOYCON_MANUFACTURER_PREFIX = bytes([0x01, 0x00, 0x03, 0x7E])
@@ -32,3 +35,9 @@ def decode_joystick(data):
         return int(x * 32767), int(y * 32767)
     except:
         return 0, 0
+    
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', path.dirname(path.abspath(__file__)))
+    return path.join(base_path, relative_path)

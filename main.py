@@ -217,7 +217,7 @@ def on_quit(icon, item):
 def create_icon(tk_main_process):
     # Icon
     settings = load_settings()
-    image = Image.open("./assets/joycon2mouse.png")
+    image = Image.open(resource_path("assets/joycon2mouse.png"))
 
     # Main features
     sync_new_controller = MenuItem('Sync new Controller', tray_connect_new_controller)
@@ -275,8 +275,8 @@ def set_joycon_type_interface(controller_id, player: Player):
     new_window.geometry(f'{width}x{height}+{x}+{y}')
     
     # Create images AFTER creating the window
-    photo1 = tk.PhotoImage(master=new_window, file="./assets/left.png")
-    photo2 = tk.PhotoImage(master=new_window, file="./assets/right.png")
+    photo1 = tk.PhotoImage(master=new_window, file=resource_path("assets/left.png"))
+    photo2 = tk.PhotoImage(master=new_window, file=resource_path("assets/right.png"))
     photo1 = photo1.subsample(4)
     photo2 = photo2.subsample(4)
 
